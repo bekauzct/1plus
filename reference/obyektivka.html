@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obyektivka — online to'ldirish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f3f4f1; --panel:#ffffff; --ink:#1c1f1d; --muted:#6b716c; --line:#e3e5e0;
+  --accent:#1f6f4a; --accent-soft:#e6f2ec; --danger:#b4412f; --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header.top{height:56px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{font-weight:700;font-size:16px;letter-spacing:-.01em}
+.brand span{color:var(--accent)}
+.top .spacer{flex:1}
+.seg{display:inline-flex;background:#eef0ec;border-radius:9px;padding:3px;gap:2px}
+.seg button{font:inherit;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--muted);padding:6px 10px;border-radius:7px;cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:#fff;color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.toast button{font:inherit;font-weight:700;color:#9fe0bd;background:none;border:none;margin-left:12px;cursor:pointer;padding:0}
+.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:#c9ccc5}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);background:#f0f1ee}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.sm{padding:5px 10px;font-size:13px}
+.layout{display:grid;grid-template-columns:minmax(380px,520px) 1fr;height:calc(100vh - 56px)}
+.form-pane{overflow-y:auto;background:var(--panel);border-right:1px solid var(--line);padding:20px 22px 80px}
+.preview-pane{overflow:auto;padding:28px 24px 60px;position:relative}
+.tabs{display:none}
+.progress{margin-bottom:18px}
+.progress .bar{height:6px;border-radius:6px;background:#eceee9;overflow:hidden}
+.progress .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.progress .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+details.sec{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;background:#fff}
+details.sec>summary{list-style:none;cursor:pointer;padding:13px 16px;font-weight:600;display:flex;align-items:center;gap:10px}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary .n{width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;display:grid;place-items:center;flex:none}
+details.sec>summary .chev{margin-left:auto;color:var(--muted);transition:transform .2s}
+details.sec[open]>summary .chev{transform:rotate(90deg)}
+.sec-body{padding:2px 16px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:12px;font-weight:600;color:var(--muted)}
+.field .hint{font-size:11.5px;color:var(--muted)}
+input[type=text],textarea,select{font:inherit;border:1px solid #d8dbd4;border-radius:8px;padding:9px 11px;background:#fff;color:var(--ink);width:100%;outline:none;transition:border-color .15s,box-shadow .15s}
+textarea{resize:vertical;min-height:62px;line-height:1.4}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.photo-row{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.photo-box{width:78px;height:104px;padding:6px;border:1.5px dashed #c6cac2;border-radius:8px;display:grid;place-items:center;overflow:hidden;background:#fafbf9;color:var(--muted);font-size:11px;text-align:center;flex:none;cursor:pointer}
+.photo-box img{width:100%;height:100%;object-fit:cover}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chip{font-size:12px;border:1px solid var(--line);background:#fafbf9;border-radius:999px;padding:3px 9px;cursor:pointer;color:var(--muted)}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.row-card{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px;background:#fcfcfb;position:relative}
+.row-card .rm{position:absolute;top:8px;right:8px}
+.row-card .head{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.row-actions{display:flex;gap:4px;position:absolute;top:6px;right:6px}
+.icon-btn{border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:6px;width:28px;height:28px;display:grid;place-items:center;font-size:15px}
+.icon-btn:hover{background:#eef0ec;color:var(--ink)}
+.icon-btn.del:hover{color:var(--danger);background:#f8ebe8}
+.add-btn{width:100%;justify-content:center;border-style:dashed;color:var(--accent)}
+.toolbar-bottom{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+
+/* ---------- Preview: A4 pages ---------- */
+.pages-wrap{transform-origin:top left}
+.page{width:794px;min-height:1123px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08),0 8px 28px rgba(0,0,0,.08);margin:0 auto 28px;padding:62px 56px 62px 86px;font-family:"Times New Roman",Tinos,Times,serif;font-size:15px;line-height:1.28;color:#000}
+.page-label{width:794px;margin:0 auto 8px;font-size:12px;color:var(--muted);font-family:Inter,sans-serif}
+.p-head{display:flex;align-items:center}
+.p-head .t{flex:1;text-align:center;padding-top:20px}
+.p-head .t .h1{font-weight:700;text-decoration:underline;font-size:17.5px}
+.p-head .t .h2{font-weight:700;text-decoration:underline;font-size:16.5px;margin-top:2px}
+.p-photo{width:104px;height:138px;border:1px solid #bbb;display:grid;place-items:center;color:#999;font-size:12px;overflow:hidden;flex:none}
+.p-photo img{width:100%;height:100%;object-fit:cover}
+.p-photo.has{border:none}
+.p-lav{margin:18px 0 10px;text-align:justify}
+table.p-info{width:100%;border-collapse:collapse;margin-bottom:4px}
+table.p-info td{vertical-align:top;padding:3px 6px 7px}
+table.p-info td.l{font-weight:700;width:18%}
+table.p-info td.v{width:24%}
+table.p-info td.l2{font-weight:700;width:17%}
+.p-q{font-weight:700;margin-top:8px}
+.p-title{text-align:center;font-weight:700;margin:18px 0 10px}
+table.p-mehnat{width:100%;border-collapse:collapse}
+table.p-mehnat td{vertical-align:top;padding:2px 6px 4px}
+table.p-mehnat td:first-child{width:23%;white-space:nowrap}
+table.p-mehnat td:last-child{text-align:justify}
+.p-rel-h{text-align:center;font-weight:700}
+table.p-rel{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}
+table.p-rel th,table.p-rel td{border:1px solid #000;padding:6px 5px;text-align:center;vertical-align:middle}
+table.p-rel th{font-weight:700}
+.empty{color:#b9bcb6}
+.flash{animation:flash .9s ease-out}
+@keyframes flash{0%{background:#fff3b0}100%{background:transparent}}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#1c1f1d;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;display:flex;align-items:center;transition:all .25s;z-index:50;max-width:90vw}
+.toast.show{pointer-events:auto;opacity:1;transform:translateX(-50%) translateY(0)}
+.modal-bg{position:fixed;inset:0;background:rgba(20,22,20,.4);display:none;place-items:center;z-index:40}
+.modal-bg.show{display:grid}
+.modal{background:#fff;border-radius:12px;padding:20px;width:min(380px,90vw)}
+.modal h3{margin:0 0 6px;font-size:16px}
+.modal p{margin:0 0 16px;color:var(--muted);line-height:1.45}
+.modal .acts{display:flex;justify-content:flex-end;gap:8px}
+
+@media (max-width:560px){.brand{display:none}}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;height:auto}
+  .tabs{display:flex;gap:4px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:56px;z-index:4}
+  .tabs button{flex:1;font:inherit;font-weight:600;padding:8px;border:none;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
+  .tabs button.on{background:var(--accent-soft);color:var(--accent)}
+  .form-pane{border-right:none;padding:16px 14px 90px}
+  .preview-pane{padding:16px 10px 60px}
+  body[data-tab=form] .preview-pane{display:none}
+  body[data-tab=preview] .form-pane{display:none}
+  .top .hide-sm{display:none}
+  header.top{padding:0 10px;gap:6px}
+  .seg button{padding:6px 7px;font-size:12px}
+  .btn.exp{padding:7px 9px;font-size:13px}
+  .grid2{grid-template-columns:1fr;gap:0}
+}
+</style>
+</head>
+<body data-tab="form">
+<header class="top">
+  <div class="brand">Obyektivka<span>.online</span></div>
+  <div class="seg" id="langSeg" role="tablist">
+    <button data-l="new" title="O‘zbek — yangi lotin (ç, ş, ğ, ö)">UZ</button><button data-l="lat" title="O‘zbek — lotin">UZB</button><button data-l="cyr" title="Ўзбек — кирилл">Кирилл</button><button data-l="ru" title="Русский">Рус</button>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn ghost hide-sm" id="btnSample" data-i="sample"></button>
+  <button class="btn exp" id="btnDocx">⬇ Word</button>
+  <button class="btn primary exp" id="btnPdf">⬇ PDF</button>
+</header>
+<div class="tabs"><button data-t="form" class="on" data-i="tabForm"></button><button data-t="preview" data-i="tabPrev"></button></div>
+
+<div class="layout">
+<!-- ================= FORM ================= -->
+<aside class="form-pane" id="form">
+  <div class="progress"><div class="lbl"><span data-i="filled"></span><span id="progTxt">0%</span></div><div class="bar"><i id="progBar"></i></div></div>
+
+  <details class="sec" open>
+    <summary><span class="n">1</span><span data-i="s1"></span><span class="chev">›</span></summary>
+    <div class="sec-body">
+      <div class="photo-row">
+        <div class="photo-box" id="photoBox"></div>
+        <div>
+          <button class="btn sm" id="btnPhoto" data-i="photoUp"></button>
+          <button class="btn sm ghost" id="btnPhotoRm" style="display:none" data-i="photoRm"></button>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:6px" data-i="photoHint"></div>
+          <input type="file" id="photoInput" accept="image/*" hidden>
+        </div>
+      </div>
+      <div class="field"><label data-i="fFish"></label><input type="text" data-k="fish" data-ph="phFish"></div>
+      <div class="field"><label data-i="fLav"></label><textarea data-k="lavozim" rows="2" data-ph="phLav"></textarea><span class="hint" data-i="hLav"></span></div>
+      <div class="grid2">
+        <div class="field"><label data-i="fTugSana"></label><input type="text" data-k="tugSana" placeholder="12.03.2006" inputmode="numeric"></div>
+        <div class="field"><label data-i="fMillati"></label><input type="text" data-k="millati" data-ph="phMillati"></div>
+      </div>
+      <div class="field"><label data-i="fTugJoy"></label><input type="text" data-k="tugJoy" data-ph="phTugJoy"></div>
+      <div class="field"><label data-i="fPartiya"></label><input type="text" data-k="partiya" data-ph="no"><div class="chips" data-for="partiya" data-src="no"></div></div>
+    </div>
+  </details>
+
+  <details class="sec">
+    <summary><span class="n">2</span><span data-i="s2"></span><span class="chev">›</span></summary>
+    <div class="sec-body">
+      <div class="field"><label data-i="fMal"></label><input type="text" data-k="malumoti" data-ph="phMal"><div class="chips" data-for="malumoti" data-src="malChips"></div></div>
+      <div class="field"><label data-i="fTam"></label><textarea data-k="tamomlagan" rows="2" data-ph="phTam"></textarea></div>
+      <div class="field"><label data-i="fMut"></label><input type="text" data-k="mutaxassislik" data-ph="phMut"></div>
+      <div class="grid2">
+        <div class="field"><label data-i="fIlD"></label><input type="text" data-k="ilmiyDaraja" data-ph="no"><div class="chips" data-for="ilmiyDaraja" data-src="no"></div></div>
+        <div class="field"><label data-i="fIlU"></label><input type="text" data-k="ilmiyUnvon" data-ph="no"><div class="chips" data-for="ilmiyUnvon" data-src="no"></div></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="sec">
+    <summary><span class="n">3</span><span data-i="s3"></span><span class="chev">›</span></summary>
+    <div class="sec-body">
+      <div class="field"><label data-i="fTil"></label><input type="text" data-k="tillar" data-ph="phTil"><div class="chips" data-for="tillar" data-src="tilChips" data-append="1"></div></div>
+      <div class="field"><label data-i="fMuk"></label><input type="text" data-k="mukofot" data-ph="no"><div class="chips" data-for="mukofot" data-src="no"></div></div>
+      <div class="field"><label data-i="fDep"></label><input type="text" data-k="deputat" data-ph="no"><div class="chips" data-for="deputat" data-src="no"></div></div>
+    </div>
+  </details>
+
+  <details class="sec">
+    <summary><span class="n">4</span><span data-i="s4"></span><span class="chev">›</span></summary>
+    <div class="sec-body">
+      <div id="mehnatList"></div>
+      <button class="btn add-btn" id="addMehnat" data-i="addM"></button>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:8px" data-i="hM"></div>
+    </div>
+  </details>
+
+  <details class="sec">
+    <summary><span class="n">5</span><span data-i="s5"></span><span class="chev">›</span></summary>
+    <div class="sec-body">
+      <div id="relList"></div>
+      <button class="btn add-btn" id="addRel" data-i="addR"></button>
+    </div>
+  </details>
+
+  <div class="toolbar-bottom">
+    <button class="btn ghost sm" id="btnSample2" data-i="sample"></button>
+    <button class="btn ghost sm" id="btnClear" style="color:var(--danger)" data-i="clear"></button>
+  </div>
+  <datalist id="relOpts"></datalist>
+</aside>
+
+<!-- ================= PREVIEW ================= -->
+<main class="preview-pane" id="previewPane">
+  <div class="pages-wrap" id="pagesWrap">
+    <div class="page-label" data-i="page1"></div>
+    <div class="page" id="page1">
+      <div class="p-head">
+        <div class="t"><div class="h1" data-tl="title"></div><div class="h2" data-p="fish"></div></div>
+        <div class="p-photo" id="pPhoto"></div>
+      </div>
+      <div class="p-lav" data-p="lavozim"></div>
+      <table class="p-info">
+        <tr><td class="l" data-tl="tugYil"></td><td class="v" data-p="tugSana"></td><td class="l2" data-tl="tugJoy"></td><td data-p="tugJoy"></td></tr>
+        <tr><td class="l" data-tl="millati"></td><td class="v" data-p="millati"></td><td class="l2" data-tl="partiya"></td><td data-p="partiya"></td></tr>
+        <tr><td class="l" data-tl="malumoti"></td><td class="v" data-p="malumoti"></td><td class="l2" data-tl="tamomlagan"></td><td data-p="tamomlagan"></td></tr>
+        <tr><td class="l" data-tl="mutax"></td><td class="v" data-p="mutaxassislik" colspan="3"></td></tr>
+        <tr><td class="l" data-tl="ilmiyD"></td><td class="v" data-p="ilmiyDaraja"></td><td class="l2" data-tl="ilmiyU"></td><td data-p="ilmiyUnvon"></td></tr>
+      </table>
+      <div class="p-q" data-tl="qTil"></div><div data-p="tillar"></div>
+      <div class="p-q" data-tl="qMuk"></div><div data-p="mukofot"></div>
+      <div class="p-q" data-tl="qDep"></div><div data-p="deputat"></div>
+      <div class="p-title" data-tl="mehnat"></div>
+      <table class="p-mehnat" id="pMehnat"></table>
+    </div>
+
+    <div class="page-label" data-i="page2"></div>
+    <div class="page" id="page2">
+      <div class="p-rel-h" id="pRelH1"></div>
+      <div class="p-rel-h" id="pRelH2"></div>
+      <table class="p-rel">
+        <thead><tr><th style="width:15%" data-tl="thRel"></th><th style="width:21%" data-tl="thFish"></th><th style="width:21%" data-tl="thTug"></th><th style="width:21%" data-tl="thIsh"></th><th data-tl="thTur"></th></tr></thead>
+        <tbody id="pRel"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="modal"><div class="modal"><h3 id="mTitle"></h3><p id="mText"></p><div class="acts"><button class="btn" id="mNo" data-i="cancel"></button><button class="btn primary" id="mYes" data-i="yes"></button></div></div></div>
+
+<script>
+/* ===== Transliteration (Uzbek: lat <-> cyr <-> new latin) ===== */
+const APOS_RE = /['‘’ʻʼ`´]/;
+const isL = c => !!c && /[A-Za-zА-Яа-яЁёЎўҚқҒғҲҳÇçŞşĞğÖö]/.test(c);
+const isU = c => !!c && c !== c.toLowerCase() && c === c.toUpperCase();
+const VOW_LAT = 'aeiouAEIOU';
+
+function lat2cyr(s) {
+  s = String(s == null ? '' : s);
+  const M = { a:'а',b:'б',d:'д',f:'ф',g:'г',h:'ҳ',i:'и',j:'ж',k:'к',l:'л',m:'м',n:'н',o:'о',p:'п',q:'қ',r:'р',s:'с',t:'т',u:'у',v:'в',x:'х',y:'й',z:'з',c:'ц',w:'в',e:'е' };
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i], lo = c.toLowerCase(), n = s[i + 1] || '', nlo = n.toLowerCase(), nn = s[i + 2] || '';
+    const up = isU(c);
+    const capsCtx = up && (isU(n) && isL(n) || (isU(s[i - 1]) && isL(s[i - 1])));
+    const put = r => { out += up ? r.toUpperCase() : r; };
+    if ((lo === 'o' || lo === 'g') && APOS_RE.test(n)) { put(lo === 'o' ? 'ў' : 'ғ'); i++; continue; }
+    if (lo === 's' && nlo === 'h') { put('ш'); i++; continue; }
+    if (lo === 'c' && nlo === 'h') { put('ч'); i++; continue; }
+    if (lo === 'y' && nlo === 'o' && APOS_RE.test(nn)) { put('й'); continue; }
+    if (lo === 'y' && 'aoue'.includes(nlo) && nlo) { put({ a:'я', o:'ё', u:'ю', e:'е' }[nlo]); i++; continue; }
+    if (lo === 'e') { put(isL(s[i - 1]) ? 'е' : 'э'); continue; }
+    if (APOS_RE.test(c) && isL(s[i - 1]) && isL(n)) { out += (isU(s[i - 1]) && isU(n)) ? 'Ъ' : 'ъ'; continue; }
+    if (M[lo]) { put(M[lo]); continue; }
+    out += c;
+  }
+  return out;
+}
+
+function cyr2lat(s) {
+  s = String(s == null ? '' : s);
+  const M = { а:'a',б:'b',в:'v',г:'g',д:'d',ё:'yo',ж:'j',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'x',ц:'ts',ч:'ch',ш:'sh',щ:'sh',ы:'i',э:'e',ю:'yu',я:'ya',ў:'oʻ',қ:'q',ғ:'gʻ',ҳ:'h' };
+  const CV = 'аеёиоуэюяўАЕЁИОУЭЮЯЎ';
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i], lo = c.toLowerCase(), p = s[i - 1], n = s[i + 1];
+    const up = isU(c);
+    const caps = up && ((isL(n) && isU(n)) || (isL(p) && isU(p)));
+    let r;
+    if (lo === 'е') r = (!isL(p) || CV.includes(p) || 'ъьЪЬ'.includes(p)) ? 'ye' : 'e';
+    else if (lo === 'ъ') { out += 'ʼ'; continue; }
+    else if (lo === 'ь') continue;
+    else r = M[lo];
+    if (r == null) { out += c; continue; }
+    if (up) r = caps ? r.toUpperCase() : r[0].toUpperCase() + r.slice(1);
+    out += r;
+  }
+  return out;
+}
+
+function lat2new(s) {
+  s = String(s == null ? '' : s);
+  return s
+    .replace(/([oOgG])['‘’ʻʼ`´]/g, (m, a) => ({ o:'ö', O:'Ö', g:'ğ', G:'Ğ' }[a]))
+    .replace(/sh/g, 'ş').replace(/S[hH]/g, 'Ş')
+    .replace(/ch/g, 'ç').replace(/C[hH]/g, 'Ç');
+}
+function new2lat(s) {
+  s = String(s == null ? '' : s);
+  const ctx = (str, i, lo, up) => {
+    const p = str[i - 1], n = str[i + 1];
+    return ((isL(n) && isU(n)) || (isL(p) && isU(p))) ? up : up[0] + lo.slice(1);
+  };
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    switch (c) {
+      case 'ö': out += 'oʻ'; break; case 'Ö': out += 'Oʻ'; break;
+      case 'ğ': out += 'gʻ'; break; case 'Ğ': out += 'Gʻ'; break;
+      case 'ş': out += 'sh'; break; case 'Ş': out += ctx(s, i, 'sh', 'SH'); break;
+      case 'ç': out += 'ch'; break; case 'Ç': out += ctx(s, i, 'ch', 'CH'); break;
+      default: out += c;
+    }
+  }
+  return out;
+}
+// script ids: 'new' (UZ), 'lat' (UZB), 'cyr', 'ru'
+function toLat(s, from) { return from === 'cyr' ? cyr2lat(s) : from === 'new' ? new2lat(s) : String(s == null ? '' : s); }
+function fromLat(s, to) { return to === 'cyr' ? lat2cyr(s) : to === 'new' ? lat2new(s) : s; }
+function convertScript(s, from, to) { if (from === to) return s; return fromLat(toLat(s, from), to); }
+function deepConvert(o, from, to, skip) {
+  if (typeof o === 'string') return convertScript(o, from, to);
+  if (Array.isArray(o)) return o.map(x => deepConvert(x, from, to, skip));
+  if (o && typeof o === 'object') { const r = {}; for (const k in o) r[k] = (skip && skip.includes(k)) ? o[k] : deepConvert(o[k], from, to, skip); return r; }
+  return o;
+}
+
+/* ===== Document template labels ===== */
+const TL_LAT = {
+  title: 'Ma’lumotnoma', photo: 'Rasm 3×4',
+  tugYil: 'Tug‘ilgan yili:', tugJoy: 'Tug‘ilgan joyi:', millati: 'Millati:', partiya: 'Partiyaviyligi:',
+  malumoti: 'Ma’lumoti:', tamomlagan: 'Tamomlagan:', mutax: 'Ma’lumoti bo‘yicha mutaxassisligi:',
+  ilmiyD: 'Ilmiy darajasi:', ilmiyU: 'Ilmiy unvoni:',
+  qTil: 'Qaysi chet va MDH xalqlari tillarini biladi:',
+  qMuk: 'Davlat mukofotlari bilan taqdirlanganmi?',
+  qDep: 'Xalq deputatlari, respublika, viloyat, shahar va tuman kengashi deputatimi? Yoki, boshqa saylanadigan organlarning a’zosimi?',
+  mehnat: 'MEHNAT FAOLIYATI', relSfx: 'ning yaqin qarindoshlari haqida', relTitle: 'MA’LUMOT',
+  thRel: 'Qarindoshligi', thFish: 'F.I.Sh', thTug: 'Tug‘ilgan yili va joyi', thIsh: 'Ish joyi va lavozimi', thTur: 'Turar joyi',
+  yy: 'yy.', y: 'y.', hv: 'h.v.', blankName: '________________'
+};
+const TL_RU = {
+  title: 'Справка', photo: 'Фото 3×4',
+  tugYil: 'Год рождения:', tugJoy: 'Место рождения:', millati: 'Национальность:', partiya: 'Партийность:',
+  malumoti: 'Образование:', tamomlagan: 'Окончил(а):', mutax: 'Специальность по образованию:',
+  ilmiyD: 'Учёная степень:', ilmiyU: 'Учёное звание:',
+  qTil: 'Какими иностранными языками и языками народов СНГ владеет:',
+  qMuk: 'Награждён(а) ли государственными наградами?',
+  qDep: 'Является ли народным депутатом республиканского, областного, городского и районного Совета или членом других выборных органов?',
+  mehnat: 'ТРУДОВАЯ ДЕЯТЕЛЬНОСТЬ', relPre: 'о близких родственниках ', relTitle: 'СВЕДЕНИЯ',
+  thRel: 'Степень родства', thFish: 'Ф.И.О.', thTug: 'Год и место рождения', thIsh: 'Место работы и должность', thTur: 'Место жительства',
+  yy: 'гг.', y: 'г.', hv: 'по н.в.', blankName: '________________'
+};
+function getTL(lang) {
+  const L = lang === 'ru' ? { ...TL_RU } : deepConvert(TL_LAT, 'lat', lang);
+  L.lang = lang;
+  L.relLines = name => lang === 'ru' ? [L.relTitle, L.relPre + name] : [name + L.relSfx, L.relTitle];
+  L.davr = m => {
+    const a = String(m.dan || '').trim(), b = String(m.gacha || '').trim();
+    if (!a && !b) return '';
+    return b ? `${a}-${b} ${L.yy}` : `${a} ${L.y} – ${L.hv}`;
+  };
+  return L;
+}
+if (typeof module !== 'undefined') module.exports = { lat2cyr, cyr2lat, lat2new, new2lat, convertScript, deepConvert, getTL };
+
+/* ===== UI strings: Latin (source for lat/new/cyr) and Russian ===== */
+const UI_LAT = {
+  sample: 'Namuna bilan to‘ldirish', tabForm: '✎ To‘ldirish', tabPrev: '👁 Ko‘rish', filled: 'To‘ldirildi',
+  s1: 'Shaxsiy ma’lumotlar', s2: 'Ma’lumoti va ilmiy daraja', s3: 'Tillar, mukofotlar, deputatlik', s4: 'Mehnat faoliyati', s5: 'Yaqin qarindoshlari',
+  photoBox: 'Rasm 3×4', photoUp: 'Rasm yuklash', photoRm: 'O‘chirish', photoHint: 'Oq fonli, 3×4 rasm. Avtomatik kesiladi.',
+  fFish: 'Familiya, ism, otasining ismi', phFish: 'Karimov Aziz Rustam o‘g‘li',
+  fLav: 'Hozirgi ish joyi / o‘qish joyi va lavozimi', phLav: '2024-yil 1-sentabrdan buyon ... talabasi', hLav: 'Odatda: “20XX-yil N-oydan buyon [tashkilot] [lavozim]”',
+  fTugSana: 'Tug‘ilgan sanasi', fMillati: 'Millati', phMillati: 'O‘zbek', fTugJoy: 'Tug‘ilgan joyi', phTugJoy: 'Samarqand viloyati, Norboy tumani',
+  fPartiya: 'Partiyaviyligi', no: 'Yo‘q',
+  fMal: 'Ma’lumoti', phMal: 'Oliy', malChips: ['O‘rta', 'O‘rta maxsus', 'Oliy', 'Tugallanmagan oliy'],
+  fTam: 'Tamomlagan (o‘quv yurti va yili)', phTam: '2020-yil, Toshkent davlat iqtisodiyot universiteti',
+  fMut: 'Ma’lumoti bo‘yicha mutaxassisligi', phMut: 'Iqtisodchi', fIlD: 'Ilmiy darajasi', fIlU: 'Ilmiy unvoni',
+  fTil: 'Qaysi chet va MDH xalqlari tillarini biladi', phTil: 'Rus tili, ingliz tili', tilChips: ['Rus tili', 'Ingliz tili', 'Turk tili', 'Koreys tili'],
+  fMuk: 'Davlat mukofotlari bilan taqdirlanganmi?', fDep: 'Deputatmi yoki saylanadigan organ a’zosimi?',
+  addM: '+ Davr qo‘shish', hM: '“Gacha” bo‘sh qolsa — “h.v.” (hozirgi vaqtgacha) deb yoziladi.', period: '-davr',
+  fDan: 'Dan (yil)', fGacha: 'Gacha (yil)', phGacha: 'h.v.', fMatn: 'Ish joyi va lavozimi', phMatn: 'Tashkilot nomi, lavozimi',
+  addR: '+ Qarindosh qo‘shish', relDef: 'Qarindosh', fRel: 'Qarindoshligi', phRel: 'Otasi', fYil: 'Tug‘ilgan yili',
+  fRFish: 'F.I.Sh', phRFish: 'Familiya Ism Otasining ismi', fRJoy: 'Tug‘ilgan joyi', phRJoy: 'Viloyat, tuman',
+  fIsh: 'Ish joyi va lavozimi', phIsh: 'Tashkilot, lavozim (yoki: Uy bekasi, Pensioner)', ishChips: ['Uy bekasi', 'Pensioner', 'Vaqtincha ishlamaydi', 'Talaba'],
+  fTurar: 'Turar joyi', phTurar: 'Viloyat, tuman, mahalla, uy', same: '↑ Yuqoridagidek',
+  rels: ['Otasi', 'Onasi', 'Akasi', 'Ukasi', 'Opasi', 'Singlisi', 'Turmush o‘rtog‘i', 'Eri', 'Xotini', 'O‘g‘li', 'Qizi', 'Qaynotasi', 'Qaynonasi'],
+  up: 'Yuqoriga', down: 'Pastga', del: 'O‘chirish',
+  clear: 'Hammasini tozalash', page1: '1-sahifa · Ma’lumotnoma', page2: '2-sahifa · Qarindoshlar',
+  phPrevFish: 'Familiya Ism Otasining ismi', phPrevLav: 'Hozirgi ish joyi va lavozimi…', noMehnat: 'Mehnat faoliyati kiritilmagan', noRel: 'Qarindoshlar kiritilmagan',
+  tSample: 'Namuna yuklandi — o‘zingiznikiga almashtiring', mSampleX: 'Hozirgi kiritilgan ma’lumotlar namuna bilan almashtiriladi. Davom etasizmi?',
+  mClearX: 'Barcha kiritilgan ma’lumotlar o‘chiriladi.', cancel: 'Bekor qilish', yes: 'Ha', tCleared: 'Tozalandi',
+  tSaved: 'Fayl saqlandi', tDeclined: 'Bekor qilindi', tWait: 'Biroz kuting va qayta urinib ko‘ring', tDl: 'Yuklab olinmoqda…',
+  tNoDl: 'Bu oynada yuklab olish ishlamadi', tWordErr: 'Word faylini yaratib bo‘lmadi', tPdfErr: 'PDF yaratib bo‘lmadi', preparing: 'Tayyorlanmoqda…',
+  tPhotoErr: 'Rasmni o‘qib bo‘lmadi', tConv: 'Kiritilgan matn ham o‘girildi', undo: 'Qaytarish',
+  tLangOnly: 'Shablon tili almashdi. Ma’lumotlarni shu tilda kiriting.', fname: 'obyektivka', langTitle: 'Hujjat tili'
+};
+const UI_RU = {
+  sample: 'Заполнить образцом', tabForm: '✎ Заполнение', tabPrev: '👁 Просмотр', filled: 'Заполнено',
+  s1: 'Личные данные', s2: 'Образование и учёная степень', s3: 'Языки, награды, депутатство', s4: 'Трудовая деятельность', s5: 'Близкие родственники',
+  photoBox: 'Фото 3×4', photoUp: 'Загрузить фото', photoRm: 'Удалить', photoHint: 'Фото 3×4 на белом фоне. Обрезается автоматически.',
+  fFish: 'Фамилия, имя, отчество', phFish: 'Каримов Азиз Рустамович',
+  fLav: 'Текущее место работы / учёбы и должность', phLav: 'С 1 сентября 2024 года студент ...', hLav: 'Обычно: «С [дата] [организация] [должность]»',
+  fTugSana: 'Дата рождения', fMillati: 'Национальность', phMillati: 'Узбек', fTugJoy: 'Место рождения', phTugJoy: 'Самаркандская область, Нарпайский район',
+  fPartiya: 'Партийность', no: 'Нет',
+  fMal: 'Образование', phMal: 'Высшее', malChips: ['Среднее', 'Среднее специальное', 'Высшее', 'Неоконченное высшее'],
+  fTam: 'Окончил(а) (учебное заведение и год)', phTam: '2020 г., Ташкентский государственный экономический университет',
+  fMut: 'Специальность по образованию', phMut: 'Экономист', fIlD: 'Учёная степень', fIlU: 'Учёное звание',
+  fTil: 'Какими иностранными языками и языками народов СНГ владеет', phTil: 'Русский, английский', tilChips: ['Русский', 'Английский', 'Турецкий', 'Корейский'],
+  fMuk: 'Награждён(а) ли государственными наградами?', fDep: 'Является ли депутатом или членом выборных органов?',
+  addM: '+ Добавить период', hM: 'Если «по» пусто — пишется «по н.в.» (по настоящее время).', period: '-й период',
+  fDan: 'С (год)', fGacha: 'По (год)', phGacha: 'н.в.', fMatn: 'Место работы и должность', phMatn: 'Организация, должность',
+  addR: '+ Добавить родственника', relDef: 'Родственник', fRel: 'Степень родства', phRel: 'Отец', fYil: 'Год рождения',
+  fRFish: 'Ф.И.О.', phRFish: 'Фамилия Имя Отчество', fRJoy: 'Место рождения', phRJoy: 'Область, район',
+  fIsh: 'Место работы и должность', phIsh: 'Организация, должность (или: Домохозяйка, Пенсионер)', ishChips: ['Домохозяйка', 'Пенсионер(ка)', 'Временно не работает', 'Студент(ка)'],
+  fTurar: 'Место жительства', phTurar: 'Область, район, махалля, дом', same: '↑ Как выше',
+  rels: ['Отец', 'Мать', 'Брат', 'Сестра', 'Супруг', 'Супруга', 'Сын', 'Дочь', 'Тесть', 'Тёща', 'Свёкор', 'Свекровь'],
+  up: 'Вверх', down: 'Вниз', del: 'Удалить',
+  clear: 'Очистить всё', page1: 'Стр. 1 · Справка', page2: 'Стр. 2 · Родственники',
+  phPrevFish: 'Фамилия Имя Отчество', phPrevLav: 'Текущее место работы и должность…', noMehnat: 'Трудовая деятельность не указана', noRel: 'Родственники не указаны',
+  tSample: 'Образец загружен — замените своими данными', mSampleX: 'Введённые данные будут заменены образцом. Продолжить?',
+  mClearX: 'Все введённые данные будут удалены.', cancel: 'Отмена', yes: 'Да', tCleared: 'Очищено',
+  tSaved: 'Файл сохранён', tDeclined: 'Отменено', tWait: 'Подождите и попробуйте снова', tDl: 'Загрузка…',
+  tNoDl: 'Скачивание в этом окне не работает', tWordErr: 'Не удалось создать файл Word', tPdfErr: 'Не удалось создать PDF', preparing: 'Подготовка…',
+  tPhotoErr: 'Не удалось прочитать фото', tConv: 'Введённый текст тоже преобразован', undo: 'Вернуть',
+  tLangOnly: 'Язык шаблона изменён. Вводите данные на этом языке.', fname: 'obyektivka', langTitle: 'Язык документа'
+};
+const UI_NOCONV = ['fname'];
+function getUI(lang) {
+  if (lang === 'ru') return UI_RU;
+  const keep = {}; UI_NOCONV.forEach(k => keep[k] = UI_LAT[k]);
+  return { ...deepConvert(UI_LAT, 'lat', lang), ...keep };
+}
+
+/* ===== Samples ===== */
+const SAMPLE_LAT = {
+  fish: 'Karimov Aziz Rustam o‘g‘li', lavozim: '2024-yil 2-sentabrdan buyon Toshkent axborot texnologiyalari universiteti Dasturiy injiniring fakulteti talabasi',
+  tugSana: '12.03.2006', tugJoy: 'Toshkent viloyati, Chirchiq shahri', millati: 'O‘zbek', partiya: 'Yo‘q', malumoti: 'O‘rta maxsus',
+  tamomlagan: '2024-yil, Chirchiq shahar 2-son politexnikumi', mutaxassislik: 'Kompyuter tizimlari texnigi', ilmiyDaraja: 'Yo‘q', ilmiyUnvon: 'Yo‘q',
+  tillar: 'Rus tili, ingliz tili', mukofot: 'Yo‘q', deputat: 'Yo‘q', photo: '',
+  mehnat: [{ dan: '2021', gacha: '2024', matn: 'Chirchiq shahar 2-son politexnikumi o‘quvchisi' }, { dan: '2024', gacha: '', matn: 'Toshkent axborot texnologiyalari universiteti Dasturiy injiniring fakulteti talabasi' }],
+  qarindosh: [
+    { rel: 'Otasi', fish: 'Karimov Rustam Bahodirovich', yil: '1976', joy: 'Toshkent viloyati, Chirchiq shahri', ish: '“Chirchiq transport” MChJ\nhaydovchi', turar: 'Toshkent viloyati, Chirchiq shahri, Navbahor ko‘chasi 14-uy' },
+    { rel: 'Onasi', fish: 'Karimova Dilnoza Akramovna', yil: '1980', joy: 'Toshkent viloyati, Bo‘stonliq tumani', ish: 'Chirchiq shahar 7-maktab\no‘qituvchi', turar: 'Toshkent viloyati, Chirchiq shahri, Navbahor ko‘chasi 14-uy' },
+    { rel: 'Singlisi', fish: 'Karimova Madina Rustam qizi', yil: '2010', joy: 'Toshkent viloyati, Chirchiq shahri', ish: 'Chirchiq shahar 7-maktab\no‘quvchisi', turar: 'Toshkent viloyati, Chirchiq shahri, Navbahor ko‘chasi 14-uy' }]
+};
+const SAMPLE_RU = {
+  fish: 'Каримов Азиз Рустамович', lavozim: 'Со 2 сентября 2024 года студент факультета программной инженерии Ташкентского университета информационных технологий',
+  tugSana: '12.03.2006', tugJoy: 'Ташкентская область, г. Чирчик', millati: 'Узбек', partiya: 'Беспартийный', malumoti: 'Среднее специальное',
+  tamomlagan: '2024 г., Политехникум № 2 г. Чирчика', mutaxassislik: 'Техник компьютерных систем', ilmiyDaraja: 'Нет', ilmiyUnvon: 'Нет',
+  tillar: 'Русский, английский', mukofot: 'Нет', deputat: 'Нет', photo: '',
+  mehnat: [{ dan: '2021', gacha: '2024', matn: 'Учащийся политехникума № 2 г. Чирчика' }, { dan: '2024', gacha: '', matn: 'Студент факультета программной инженерии Ташкентского университета информационных технологий' }],
+  qarindosh: [
+    { rel: 'Отец', fish: 'Каримов Рустам Бахадирович', yil: '1976', joy: 'Ташкентская область, г. Чирчик', ish: 'ООО «Chirchiq transport»\nводитель', turar: 'Ташкентская область, г. Чирчик, ул. Навбахор, д. 14' },
+    { rel: 'Мать', fish: 'Каримова Дилноза Акрамовна', yil: '1980', joy: 'Ташкентская область, Бостанлыкский район', ish: 'Школа № 7 г. Чирчика\nучитель', turar: 'Ташкентская область, г. Чирчик, ул. Навбахор, д. 14' },
+    { rel: 'Сестра', fish: 'Каримова Мадина Рустамовна', yil: '2010', joy: 'Ташкентская область, г. Чирчик', ish: 'Школа № 7 г. Чирчика\nученица', turar: 'Ташкентская область, г. Чирчик, ул. Навбахор, д. 14' }]
+};
+function getSample(lang) { return lang === 'ru' ? JSON.parse(JSON.stringify(SAMPLE_RU)) : deepConvert(SAMPLE_LAT, 'lat', lang, ['photo', 'tugSana']); }
+
+// Pure builder: data -> { path: string|Uint8Array } for a .docx package
+function buildDocxFiles(d, photoBytes, L) {
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const run = (t, o = {}) => {
+    const lines = String(t == null ? '' : t).split('\n');
+    const rpr = `<w:rPr>${o.b ? '<w:b/>' : ''}${o.u ? '<w:u w:val="single"/>' : ''}${o.sz ? `<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>` : ''}</w:rPr>`;
+    return lines.map((l, i) => `<w:r>${rpr}${i ? '<w:br/>' : ''}<w:t xml:space="preserve">${esc(l)}</w:t></w:r>`).join('');
+  };
+  const p = (content, o = {}) => `<w:p><w:pPr>${o.pb ? '<w:pageBreakBefore/>' : ''}<w:spacing w:before="${o.before || 0}" w:after="${o.after == null ? 0 : o.after}"/>${o.jc ? `<w:jc w:val="${o.jc}"/>` : ''}</w:pPr>${content}</w:p>`;
+  const B = 'w:val="single" w:sz="4" w:space="0" w:color="000000"';
+  const borders = on => on
+    ? `<w:tblBorders><w:top ${B}/><w:left ${B}/><w:bottom ${B}/><w:right ${B}/><w:insideH ${B}/><w:insideV ${B}/></w:tblBorders>`
+    : `<w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders>`;
+  const table = (widths, rows, o = {}) => {
+    const total = widths.reduce((a, b) => a + b, 0);
+    return `<w:tbl><w:tblPr><w:tblW w:w="${total}" w:type="dxa"/>${borders(o.border)}<w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="40" w:type="dxa"/><w:left w:w="80" w:type="dxa"/><w:bottom w:w="40" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr>` +
+      `<w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>` +
+      rows.map(r => `<w:tr>${r.map((c, i) => `<w:tc><w:tcPr><w:tcW w:w="${widths[i]}" w:type="dxa"/>${o.vc ? '<w:vAlign w:val="center"/>' : ''}</w:tcPr>${c || '<w:p/>'}</w:tc>`).join('')}</w:tr>`).join('') +
+      `</w:tbl>`;
+  };
+  const v = x => (x && String(x).trim()) ? x : '';
+  const fish = v(d.fish) || L.blankName;
+
+  // Header with photo
+  const cx = 987552, cy = 1316736; // 1.08in x 1.44in
+  const img = photoBytes ? `<w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Rasm"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="photo.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdImg"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`
+    : p(run(L.photo), { jc: 'right' });
+  let body = table([7600, 2000], [[
+    p('', { after: 300 }) + p(run(L.title, { b: true, u: true, sz: 28 }), { jc: 'center' }) + p(run(fish, { b: true, u: true, sz: 26 }), { jc: 'center' }),
+    img
+  ]], { vc: true });
+
+  body += p(run(v(d.lavozim)), { before: 200, after: 120, jc: 'both' });
+
+  const lab = t => p(run(t, { b: true }));
+  const val = t => p(run(v(t)));
+  body += table([1700, 2300, 1700, 3900], [
+    [lab(L.tugYil), val(d.tugSana), lab(L.tugJoy), val(d.tugJoy)],
+    [lab(L.millati), val(d.millati), lab(L.partiya), val(d.partiya)],
+    [lab(L.malumoti), val(d.malumoti), lab(L.tamomlagan), val(d.tamomlagan)],
+    [lab(L.mutax), val(d.mutaxassislik), '', ''],
+    [lab(L.ilmiyD), val(d.ilmiyDaraja), lab(L.ilmiyU), val(d.ilmiyUnvon)],
+  ]);
+
+  const qa = (q, a) => p(run(q, { b: true }), { before: 120 }) + p(run(v(a)));
+  body += qa(L.qTil, d.tillar);
+  body += qa(L.qMuk, d.mukofot);
+  body += qa(L.qDep, d.deputat);
+
+  body += p(run(L.mehnat, { b: true }), { jc: 'center', before: 240, after: 120 });
+  const mehnat = (d.mehnat || []).filter(m => v(m.dan) || v(m.matn));
+  if (mehnat.length) {
+    body += table([2200, 7400], mehnat.map(m => [p(run(L.davr(m))), p(run('– ' + v(m.matn)), { jc: 'both' })]));
+  }
+
+  // Page 2: relatives
+  const rl = L.relLines(fish);
+  body += p(run(rl[0], { b: true }), { jc: 'center', pb: true });
+  body += p(run(rl[1], { b: true }), { jc: 'center', after: 200 });
+  const hc = t => p(run(t, { b: true, sz: 22 }), { jc: 'center' });
+  const c = t => p(run(v(t), { sz: 22 }), { jc: 'center' });
+  const rel = (d.qarindosh || []).filter(r => v(r.rel) || v(r.fish));
+  body += table([1750, 1950, 1950, 1900, 2050], [
+    [hc(L.thRel), hc(L.thFish), hc(L.thTug), hc(L.thIsh), hc(L.thTur)],
+    ...rel.map(r => [c(r.rel), c(r.fish), c([v(r.yil), v(r.joy)].filter(Boolean).join('\n')), c(r.ish), c(r.turar)])
+  ], { border: true, vc: true });
+
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1000" w:right="850" w:bottom="1000" w:left="1300" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman" w:eastAsia="Times New Roman"/><w:sz w:val="24"/><w:szCs w:val="24"/><w:lang w:val="${L.lang === 'ru' ? 'ru-RU' : L.lang === 'cyr' ? 'uz-Cyrl-UZ' : 'uz-Latn-UZ'}"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+
+  const files = {
+    '[Content_Types].xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`,
+    '_rels/.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`,
+    'word/_rels/document.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${photoBytes ? '<Relationship Id="rIdImg" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/photo.jpg"/>' : ''}</Relationships>`,
+    'word/document.xml': doc,
+    'word/styles.xml': styles,
+  };
+  if (photoBytes) files['word/media/photo.jpg'] = photoBytes;
+  return files;
+}
+if (typeof module !== 'undefined') module.exports = { buildDocxFiles };
+
+</script>
+<script>
+(function(){
+const KEYS=['fish','lavozim','tugSana','tugJoy','millati','partiya','malumoti','tamomlagan','mutaxassislik','ilmiyDaraja','ilmiyUnvon','tillar','mukofot','deputat'];
+const STORE='obyektivka-draft-v2', LANGS=['new','lat','cyr','ru'];
+const NOCONV=['photo','tugSana','lang'];
+let U, T;
+const blank=lang=>{const u=getUI(lang);return {...Object.fromEntries(KEYS.map(k=>[k,''])),lang,photo:'',mehnat:[{dan:'',gacha:'',matn:''}],qarindosh:[{rel:u.rels[0],fish:'',yil:'',joy:'',ish:'',turar:''},{rel:u.rels[1],fish:'',yil:'',joy:'',ish:'',turar:''}]}};
+
+let S=load()||blank('lat');
+if(!LANGS.includes(S.lang))S.lang='lat';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nl=s=>esc(s).replace(/\n/g,'<br>');
+const has=s=>s&&String(s).trim();
+
+function load(){try{let r=localStorage.getItem(STORE);if(r)return JSON.parse(r);r=localStorage.getItem('obyektivka-draft-v1');if(r){const o=JSON.parse(r);o.lang='lat';return o}return null}catch(e){return null}}
+let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}},300)}
+function toast(m,ms=2600,action){const t=$('#toast');t.innerHTML='';const sp=document.createElement('span');sp.textContent=m;t.appendChild(sp);
+  if(action){const b=document.createElement('button');b.textContent=action.label;b.onclick=()=>{t.classList.remove('show');action.fn()};t.appendChild(b)}
+  t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms)}
+function confirmBox(text){return new Promise(res=>{$('#mTitle').textContent='';$('#mText').textContent=text;$('#modal').classList.add('show');const done=v=>{$('#modal').classList.remove('show');$('#mYes').onclick=$('#mNo').onclick=null;res(v)};$('#mYes').onclick=()=>done(true);$('#mNo').onclick=()=>done(false)})}
+
+/* ---- language ---- */
+function applyLang(){
+  U=getUI(S.lang);T=getTL(S.lang);
+  document.documentElement.lang=S.lang==='ru'?'ru':S.lang==='cyr'?'uz-Cyrl':'uz';
+  $$('#langSeg button').forEach(b=>b.classList.toggle('on',b.dataset.l===S.lang));
+  $('#langSeg').title=U.langTitle;
+  $$('[data-i]').forEach(el=>el.innerHTML=U[el.dataset.i]);
+  $$('[data-ph]').forEach(el=>el.placeholder=U[el.dataset.ph]);
+  $$('[data-tl]').forEach(el=>el.textContent=T[el.dataset.tl]);
+  $$('.chips[data-src]').forEach(box=>{const v=U[box.dataset.src];box.innerHTML=(Array.isArray(v)?v:[v]).map(x=>`<span class="chip">${esc(x)}</span>`).join('')});
+  $('#relOpts').innerHTML=U.rels.map(r=>`<option>${esc(r)}</option>`).join('');
+  $('#btnDocx').title='Word (.docx)';$('#btnPdf').title='PDF';
+}
+$('#langSeg').addEventListener('click',e=>{const b=e.target.closest('button[data-l]');if(!b)return;switchLang(b.dataset.l)});
+function switchLang(to){
+  const from=S.lang;if(to===from)return;
+  const prev=JSON.parse(JSON.stringify(S));
+  const uz=l=>l!=='ru';
+  const anyData=KEYS.some(k=>has(S[k]))||S.mehnat.some(m=>has(m.matn))||S.qarindosh.some(r=>has(r.fish));
+  if(uz(from)&&uz(to)){S=deepConvert(S,from,to,NOCONV)}
+  else{
+    // switching to/from Russian: translate default relation labels, keep user text as is
+    const fu=getUI(from),tu=getUI(to);
+    S.qarindosh.forEach(r=>{const i=fu.rels.indexOf(r.rel);if(i>-1&&!has(r.fish)&&tu.rels[Math.min(i,tu.rels.length-1)])r.rel=tu.rels[Math.min(i,tu.rels.length-1)]});
+  }
+  S.lang=to;applyLang();fillForm();save();
+  if(anyData){
+    if(uz(from)&&uz(to))toast(U.tConv,5000,{label:U.undo,fn:()=>{S=prev;applyLang();fillForm();save()}});
+    else toast(U.tLangOnly,4000);
+  }
+}
+
+/* ---- simple fields ---- */
+function fillForm(){
+  $$('[data-k]').forEach(el=>el.value=S[el.dataset.k]||'');
+  renderPhotoForm();renderMehnatForm();renderRelForm();renderAll();
+}
+$$('[data-k]').forEach(el=>el.addEventListener('input',()=>{S[el.dataset.k]=el.value;renderField(el.dataset.k,true);if(el.dataset.k==='fish')renderRel();progress();save()}));
+$('#form').addEventListener('click',e=>{
+  const c=e.target.closest('.chips[data-for] .chip');if(!c)return;const box=c.parentElement;const k=box.dataset.for;const inp=$(`[data-k="${k}"]`);
+  if(box.dataset.append){const cur=(inp.value||'').split(',').map(s=>s.trim()).filter(Boolean);if(!cur.includes(c.textContent))cur.push(c.textContent);inp.value=cur.join(', ')}else inp.value=c.textContent;
+  inp.dispatchEvent(new Event('input'));
+});
+$('[data-k="tugSana"]').addEventListener('input',e=>{
+  const el=e.target;if(e.inputType&&e.inputType.startsWith('delete'))return;
+  const d=el.value.replace(/\D/g,'').slice(0,8);let o=d;if(d.length>4)o=d.slice(0,2)+'.'+d.slice(2,4)+'.'+d.slice(4);else if(d.length>2)o=d.slice(0,2)+'.'+d.slice(2);
+  if(o!==el.value){el.value=o;S.tugSana=o;renderField('tugSana');save()}
+});
+
+/* ---- photo ---- */
+const photoInput=$('#photoInput');
+$('#btnPhoto').onclick=$('#photoBox').onclick=()=>photoInput.click();
+$('#btnPhotoRm').onclick=()=>{S.photo='';renderPhotoForm();renderPhoto();progress();save()};
+photoInput.onchange=()=>{const f=photoInput.files[0];if(!f)return;const img=new Image();const url=URL.createObjectURL(f);
+  img.onload=()=>{const W=450,H=600;const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);
+    const r=Math.max(W/img.width,H/img.height);const w=img.width*r,h=img.height*r;x.drawImage(img,(W-w)/2,(H-h)/2,w,h);
+    S.photo=c.toDataURL('image/jpeg',0.88);URL.revokeObjectURL(url);renderPhotoForm();renderPhoto(true);progress();save()};
+  img.onerror=()=>toast(U.tPhotoErr);img.src=url;photoInput.value=''};
+function renderPhotoForm(){const b=$('#photoBox');b.innerHTML=S.photo?`<img src="${S.photo}" alt="">`:U.photoBox;$('#btnPhotoRm').style.display=S.photo?'':'none'}
+function renderPhoto(fl){const p=$('#pPhoto');p.classList.toggle('has',!!S.photo);p.innerHTML=S.photo?`<img src="${S.photo}" alt="">`:esc(T.photo);if(fl)flash(p)}
+
+/* ---- mehnat ---- */
+const rowActs=()=>`<div class="row-actions"><button class="icon-btn" data-act="up" title="${esc(U.up)}">↑</button><button class="icon-btn" data-act="down" title="${esc(U.down)}">↓</button><button class="icon-btn del" data-act="del" title="${esc(U.del)}">✕</button></div>`;
+function renderMehnatForm(){
+  $('#mehnatList').innerHTML=S.mehnat.map((m,i)=>`<div class="row-card" data-i="${i}">${rowActs()}
+    <div class="head">${i+1}${esc(U.period)}</div>
+    <div class="grid2"><div class="field"><label>${esc(U.fDan)}</label><input type="text" data-m="dan" value="${esc(m.dan)}" placeholder="2020" inputmode="numeric"></div>
+    <div class="field"><label>${esc(U.fGacha)}</label><input type="text" data-m="gacha" value="${esc(m.gacha)}" placeholder="${esc(U.phGacha)}" inputmode="numeric"></div></div>
+    <div class="field" style="margin-bottom:0"><label>${esc(U.fMatn)}</label><textarea data-m="matn" rows="2" placeholder="${esc(U.phMatn)}">${esc(m.matn)}</textarea></div></div>`).join('');
+}
+$('#mehnatList').addEventListener('input',e=>{const el=e.target;if(!el.dataset.m)return;const i=+el.closest('.row-card').dataset.i;S.mehnat[i][el.dataset.m]=el.value;renderMehnat(i);progress();save()});
+$('#mehnatList').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const i=+b.closest('.row-card').dataset.i;listAct(S.mehnat,i,b.dataset.act);renderMehnatForm();renderMehnat();progress();save()});
+$('#addMehnat').onclick=()=>{const last=S.mehnat[S.mehnat.length-1];S.mehnat.push({dan:last&&last.gacha||'',gacha:'',matn:''});renderMehnatForm();renderMehnat();const ins=$$('#mehnatList textarea');ins[ins.length-1]&&ins[ins.length-1].focus();save()};
+
+/* ---- qarindosh ---- */
+function renderRelForm(){
+  $('#relList').innerHTML=S.qarindosh.map((r,i)=>`<div class="row-card" data-i="${i}">${rowActs()}
+    <div class="head">${i+1}. ${esc(r.rel)||esc(U.relDef)}</div>
+    <div class="grid2"><div class="field"><label>${esc(U.fRel)}</label><input type="text" list="relOpts" data-r="rel" value="${esc(r.rel)}" placeholder="${esc(U.phRel)}"></div>
+    <div class="field"><label>${esc(U.fYil)}</label><input type="text" data-r="yil" value="${esc(r.yil)}" placeholder="1975" inputmode="numeric"></div></div>
+    <div class="field"><label>${esc(U.fRFish)}</label><input type="text" data-r="fish" value="${esc(r.fish)}" placeholder="${esc(U.phRFish)}"></div>
+    <div class="field"><label>${esc(U.fRJoy)}</label><input type="text" data-r="joy" value="${esc(r.joy)}" placeholder="${esc(U.phRJoy)}"></div>
+    <div class="field"><label>${esc(U.fIsh)}</label><textarea data-r="ish" rows="2" placeholder="${esc(U.phIsh)}">${esc(r.ish)}</textarea>
+      <div class="chips">${U.ishChips.map(c=>`<span class="chip" data-ish="1">${esc(c)}</span>`).join('')}</div></div>
+    <div class="field" style="margin-bottom:0"><label>${esc(U.fTurar)}</label><textarea data-r="turar" rows="2" placeholder="${esc(U.phTurar)}">${esc(r.turar)}</textarea>
+      ${i>0?`<div class="chips"><span class="chip" data-copy="turar">${esc(U.same)}</span></div>`:''}</div></div>`).join('');
+}
+$('#relList').addEventListener('input',e=>{const el=e.target;if(!el.dataset.r)return;const card=el.closest('.row-card');const i=+card.dataset.i;S.qarindosh[i][el.dataset.r]=el.value;
+  if(el.dataset.r==='rel')card.querySelector('.head').textContent=`${i+1}. ${el.value||U.relDef}`;renderRel(i);progress();save()});
+$('#relList').addEventListener('click',e=>{const card=e.target.closest('.row-card');if(!card)return;const i=+card.dataset.i;
+  const b=e.target.closest('[data-act]');if(b){listAct(S.qarindosh,i,b.dataset.act);renderRelForm();renderRel();progress();save();return}
+  const c=e.target.closest('.chip');if(!c)return;
+  if(c.dataset.copy){const v=S.qarindosh[i-1].turar;S.qarindosh[i].turar=v;card.querySelector('[data-r="turar"]').value=v}
+  else if(c.dataset.ish){S.qarindosh[i].ish=c.textContent;card.querySelector('[data-r="ish"]').value=c.textContent}
+  renderRel(i);progress();save()});
+$('#addRel').onclick=()=>{const last=S.qarindosh[S.qarindosh.length-1];S.qarindosh.push({rel:'',fish:'',yil:'',joy:'',ish:'',turar:last?last.turar:''});renderRelForm();renderRel();const ins=$$('#relList [data-r="rel"]');ins[ins.length-1]&&ins[ins.length-1].focus();save()};
+function listAct(arr,i,act){if(act==='del'){arr.splice(i,1)}else if(act==='up'&&i>0){[arr[i-1],arr[i]]=[arr[i],arr[i-1]]}else if(act==='down'&&i<arr.length-1){[arr[i+1],arr[i]]=[arr[i],arr[i+1]]}}
+
+/* ---- preview render ---- */
+function flash(el){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
+function renderField(k,fl){const ph={fish:U.phPrevFish,lavozim:U.phPrevLav}[k];$$(`[data-p="${k}"]`).forEach(el=>{el.innerHTML=has(S[k])?nl(S[k]):(ph?`<span class="empty">${esc(ph)}</span>`:'<span class="empty">—</span>');if(fl){flash(el);scrollTo(el)}})}
+function renderMehnat(fi){const rows=S.mehnat.map((m,i)=>({m,i})).filter(x=>has(x.m.dan)||has(x.m.matn));
+  $('#pMehnat').innerHTML=rows.length?rows.map(({m,i})=>`<tr data-i="${i}"><td>${esc(T.davr(m))}</td><td>– ${nl(m.matn)}</td></tr>`).join(''):`<tr><td colspan="2" class="empty" style="text-align:center">${esc(U.noMehnat)}</td></tr>`;
+  if(fi!=null){const r=$(`#pMehnat tr[data-i="${fi}"]`);if(r){flash(r);scrollTo(r)}}}
+function renderRel(fi){const fish=has(S.fish)?S.fish:T.blankName;const rl=T.relLines(fish);$('#pRelH1').textContent=rl[0];$('#pRelH2').textContent=rl[1];
+  const rows=S.qarindosh.map((r,i)=>({r,i})).filter(x=>has(x.r.rel)||has(x.r.fish));
+  $('#pRel').innerHTML=rows.length?rows.map(({r,i})=>`<tr data-i="${i}"><td>${esc(r.rel)}</td><td>${esc(r.fish)}</td><td>${[r.yil,r.joy].filter(has).map(esc).join('<br>')}</td><td>${nl(r.ish)}</td><td>${nl(r.turar)}</td></tr>`).join(''):`<tr><td colspan="5" class="empty">${esc(U.noRel)}</td></tr>`;
+  if(fi!=null){const r=$(`#pRel tr[data-i="${fi}"]`);if(r){flash(r);scrollTo(r)}}}
+function renderAll(){KEYS.forEach(k=>renderField(k));renderPhoto();renderMehnat();renderRel();progress()}
+let lastScroll=0;function scrollTo(el){const now=Date.now();if(now-lastScroll<400)return;lastScroll=now;const pane=$('#previewPane');const r=el.getBoundingClientRect(),pr=pane.getBoundingClientRect();if(r.top<pr.top+40||r.bottom>pr.bottom-40){pane.scrollBy({top:r.top-pr.top-pr.height/3,behavior:'smooth'})}}
+function progress(){let n=KEYS.filter(k=>has(S[k])).length,t=KEYS.length+3;if(S.photo)n++;if(S.mehnat.some(m=>has(m.matn)))n++;if(S.qarindosh.some(r=>has(r.fish)))n++;
+  const p=Math.round(n/t*100);$('#progBar').style.width=p+'%';$('#progTxt').textContent=p+'%'}
+
+/* ---- scale preview ---- */
+const wrap=$('#pagesWrap'),pane=$('#previewPane');
+function fit(){const avail=pane.clientWidth-(innerWidth<900?20:48);const s=Math.min(1,avail/794);wrap.style.zoom=s}
+try{new ResizeObserver(fit).observe(pane)}catch(e){addEventListener('resize',fit)}
+$$('.tabs button').forEach(b=>b.onclick=()=>{document.body.dataset.tab=b.dataset.t;$$('.tabs button').forEach(x=>x.classList.toggle('on',x===b));fit()});
+
+/* ---- sample / clear ---- */
+async function sample(){if(KEYS.some(k=>has(S[k]))&&!(await confirmBox(U.mSampleX)))return;const photo=S.photo;S={...getSample(S.lang),lang:S.lang,photo};fillForm();save();toast(U.tSample)}
+$('#btnSample').onclick=$('#btnSample2').onclick=sample;
+$('#btnClear').onclick=async()=>{if(!(await confirmBox(U.mClearX)))return;S=blank(S.lang);fillForm();save();toast(U.tCleared)};
+
+/* ---- export ---- */
+let dl=null;
+(async()=>{try{if(window.claude&&claude.use)dl=await claude.use('downloads')}catch(e){dl=null}})();
+function fname(ext){const n=(has(S.fish)?S.fish:U.fname).replace(/[\\/:*?"<>|]+/g,'').trim().replace(/\s+/g,'_');return `${n}_obyektivka.${ext}`}
+async function deliver(blob,ext){
+  if(dl){try{await dl.save({filename:fname(ext),data:blob});toast(U.tSaved);return}catch(e){if(e&&e.code==='declined'){toast(U.tDeclined);return}if(e&&e.code==='rate_limited'){toast(U.tWait);return}}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname(ext);document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast(U.tDl)}catch(e){toast(U.tNoDl)}
+}
+function b64ToBytes(dataUrl){const b=atob(dataUrl.split(',')[1]);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+$('#btnDocx').onclick=async e=>{const btn=e.currentTarget;btn.disabled=true;try{
+  if(!window.JSZip)throw new Error('lib');const files=buildDocxFiles(S,S.photo?b64ToBytes(S.photo):null,T);const z=new JSZip();for(const[k,v]of Object.entries(files))z.file(k,v);
+  const blob=await z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});await deliver(blob,'docx');
+}catch(err){toast(U.tWordErr)}finally{btn.disabled=false}};
+$('#btnPdf').onclick=async e=>{const btn=e.currentTarget;btn.disabled=true;const old=btn.innerHTML;btn.innerHTML=U.preparing;
+  const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff';document.body.appendChild(host);
+  try{if(!window.html2canvas||!window.jspdf)throw new Error('lib');const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'pt',format:'a4'});const PW=pdf.internal.pageSize.getWidth(),PHh=pdf.internal.pageSize.getHeight();let first=true;
+    for(const id of ['page1','page2']){const cl=$('#'+id).cloneNode(true);cl.removeAttribute('id');cl.style.boxShadow='none';cl.style.margin='0';
+      cl.querySelectorAll('.empty').forEach(x=>x.textContent='');cl.querySelectorAll('.flash').forEach(x=>x.classList.remove('flash'));const ph=cl.querySelector('.p-photo:not(.has)');if(ph)ph.textContent='';
+      host.innerHTML='';host.appendChild(cl);
+      const cv=await html2canvas(cl,{scale:2,backgroundColor:'#fff',useCORS:true});const pxPerPage=cv.width*(PHh/PW);
+      for(let y=0;y<cv.height-4;y+=pxPerPage){const h=Math.min(pxPerPage,cv.height-y);const part=document.createElement('canvas');part.width=cv.width;part.height=pxPerPage;const ctx=part.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,part.width,part.height);ctx.drawImage(cv,0,y,cv.width,h,0,0,cv.width,h);
+        if(!first)pdf.addPage();first=false;pdf.addImage(part.toDataURL('image/jpeg',0.95),'JPEG',0,0,PW,PHh)}}
+    await deliver(pdf.output('blob'),'pdf');
+  }catch(err){toast(U.tPdfErr)}finally{host.remove();btn.disabled=false;btn.innerHTML=old}};
+
+applyLang();fillForm();fit();setTimeout(fit,300);
+})();
+
+</script>
+</body>
+</html>
