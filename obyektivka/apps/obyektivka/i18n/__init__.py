@@ -98,15 +98,15 @@ def get_tl(code: str) -> Labels:
 
 
 def get_ui(code: str) -> dict[str, Any]:
-    return get_lang(code).module.UI  # type: ignore[no-any-return]
+    return get_lang(code).module.UI
 
 
 def get_site(code: str) -> dict[str, Any]:
-    return get_lang(code).module.SITE  # type: ignore[no-any-return]
+    return get_lang(code).module.SITE
 
 
 def get_sample(code: str) -> dict[str, Any]:
     """Namuna ma'lumot (har chaqiruvda yangi nusxa)."""
     data = copy.deepcopy(get_lang(code).module.SAMPLE)
     data["lang"] = get_lang(code).code
-    return data  # type: ignore[no-any-return]
+    return data

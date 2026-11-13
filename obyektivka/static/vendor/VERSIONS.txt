@@ -1,0 +1,6 @@
+htmx.org      2.0.4   htmx.min.js          (BSD-2-Clause)
+alpinejs      3.14.8  alpine.min.js        (MIT)
+@alpinejs/focus 3.14.8 alpine-focus.min.js (MIT)
+sortablejs    1.15.6  sortable.min.js      (MIT)
+cropperjs     1.6.2   cropper.min.js/.css  (MIT)
+Manba: npm registry (npm pack <paket>@<versiya>)

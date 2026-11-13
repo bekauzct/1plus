@@ -7,7 +7,7 @@ from . import uz_lat
 
 
 def derive(d: dict[str, Any], skip: list[str] | None = None) -> dict[str, Any]:
-    return deep_convert(d, "lat", "new", skip)  # type: ignore[no-any-return]
+    return deep_convert(d, "lat", "new", skip)
 
 
 TL: dict[str, Any] = derive(uz_lat.TL)

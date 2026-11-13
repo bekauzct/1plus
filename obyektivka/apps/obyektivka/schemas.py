@@ -12,7 +12,7 @@ import binascii
 import io
 import re
 from datetime import date
-from typing import Annotated, Any, Literal
+from typing import Any, Literal, cast
 
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, ValidationInfo, field_validator
@@ -32,8 +32,7 @@ _DATE_RE = re.compile(r"^(\d{2})\.(\d{2})\.(\d{4})$")
 _YEAR_RE = re.compile(r"^\d{4}$")
 _DATA_URL_RE = re.compile(r"^data:(image/(?:jpeg|png));base64,([A-Za-z0-9+/=\s]+)$")
 
-Short = Annotated[str, Field(default="", max_length=300)]
-Long = Annotated[str, Field(default="", max_length=2000)]
+SHORT, LONG = 300, 2000
 
 
 def has(value: object) -> bool:
@@ -104,9 +103,9 @@ class _Base(BaseModel):
 class MehnatDavr(_Base):
     """Mehnat faoliyatidagi bitta davr. ``gacha`` bo'sh bo'lsa — hozirgi vaqtgacha (h.v.)."""
 
-    dan: Annotated[str, Field(default="", max_length=10)]
-    gacha: Annotated[str, Field(default="", max_length=10)]
-    matn: Long
+    dan: str = Field(default="", max_length=10)
+    gacha: str = Field(default="", max_length=10)
+    matn: str = Field(default="", max_length=LONG)
 
     _year = field_validator("dan", "gacha")(_check_year)
 
@@ -117,12 +116,12 @@ class MehnatDavr(_Base):
 class Qarindosh(_Base):
     """Yaqin qarindosh (2-sahifadagi jadval qatori)."""
 
-    rel: Short
-    fish: Short
-    yil: Annotated[str, Field(default="", max_length=10)]
-    joy: Short
-    ish: Long
-    turar: Long
+    rel: str = Field(default="", max_length=SHORT)
+    fish: str = Field(default="", max_length=SHORT)
+    yil: str = Field(default="", max_length=10)
+    joy: str = Field(default="", max_length=SHORT)
+    ish: str = Field(default="", max_length=LONG)
+    turar: str = Field(default="", max_length=LONG)
 
     _year = field_validator("yil")(_check_year)
 
@@ -132,23 +131,23 @@ class Qarindosh(_Base):
 
 class Obyektivka(_Base):
     lang: LangCode = "lat"
-    fish: Short
-    lavozim: Long
-    tugSana: Annotated[str, Field(default="", max_length=20)]
-    tugJoy: Short
-    millati: Short
-    partiya: Short
-    malumoti: Short
-    tamomlagan: Long
-    mutaxassislik: Short
-    ilmiyDaraja: Short
-    ilmiyUnvon: Short
-    tillar: Short
-    mukofot: Long
-    deputat: Long
-    photo: Annotated[str, Field(default="", max_length=6 * 1024 * 1024)]
-    mehnat: Annotated[list[MehnatDavr], Field(default_factory=list, max_length=60)]
-    qarindosh: Annotated[list[Qarindosh], Field(default_factory=list, max_length=40)]
+    fish: str = Field(default="", max_length=SHORT)
+    lavozim: str = Field(default="", max_length=LONG)
+    tugSana: str = Field(default="", max_length=20)
+    tugJoy: str = Field(default="", max_length=SHORT)
+    millati: str = Field(default="", max_length=SHORT)
+    partiya: str = Field(default="", max_length=SHORT)
+    malumoti: str = Field(default="", max_length=SHORT)
+    tamomlagan: str = Field(default="", max_length=LONG)
+    mutaxassislik: str = Field(default="", max_length=SHORT)
+    ilmiyDaraja: str = Field(default="", max_length=SHORT)
+    ilmiyUnvon: str = Field(default="", max_length=SHORT)
+    tillar: str = Field(default="", max_length=SHORT)
+    mukofot: str = Field(default="", max_length=LONG)
+    deputat: str = Field(default="", max_length=LONG)
+    photo: str = Field(default="", max_length=6 * 1024 * 1024)
+    mehnat: list[MehnatDavr] = Field(default_factory=list, max_length=60)
+    qarindosh: list[Qarindosh] = Field(default_factory=list, max_length=40)
 
     @field_validator("lang", mode="before")
     @classmethod
@@ -216,7 +215,8 @@ def lenient(data: Any) -> Obyektivka:
     for k in TEXT_FIELDS:
         v = cleaned.get(k, "")
         setattr(model, k, str(v)[:2000] if v is not None else "")
-    model.lang = cleaned.get("lang") if cleaned.get("lang") in ("new", "lat", "cyr", "ru") else "lat"
+    lang = cleaned.get("lang")
+    model.lang = cast(LangCode, lang if lang in ("new", "lat", "cyr", "ru") else "lat")
     model.photo = "" if any(loc and loc[0] == "photo" for loc in bad) else str(cleaned.get("photo") or "")
 
     def rows(key: str, cls: type[_Base], fields: tuple[str, ...]) -> list[Any]:
@@ -227,7 +227,8 @@ def lenient(data: Any) -> Obyektivka:
         for item in src[:60]:
             if not isinstance(item, dict):
                 continue
-            result.append(cls.model_construct(**{f: str(item.get(f) or "")[:2000] for f in fields}))
+            values: dict[str, Any] = {f: str(item.get(f) or "")[:2000] for f in fields}
+            result.append(cls.model_construct(None, **values))
         return result
 
     model.mehnat = rows("mehnat", MehnatDavr, ("dan", "gacha", "matn"))

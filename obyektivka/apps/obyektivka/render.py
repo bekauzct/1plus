@@ -43,7 +43,7 @@ def display_fish(d: Obyektivka, tl: Labels) -> str:
     return d.fish if has(d.fish) else str(tl["blankName"])
 
 
-def document_context(d: Obyektivka, mode: Mode) -> dict[str, Any]:
+def document_context(d: Obyektivka, mode: Mode, page_labels: bool = True) -> dict[str, Any]:
     tl = get_tl(d.lang)
     fish = display_fish(d, tl)
     return {
@@ -51,6 +51,7 @@ def document_context(d: Obyektivka, mode: Mode) -> dict[str, Any]:
         "T": tl,
         "U": get_ui(d.lang),
         "mode": mode,
+        "page_labels": page_labels,
         "html_lang": get_lang(d.lang).html_lang,
         "fish": fish,
         "rel_lines": tl.rel_lines(fish),
@@ -65,9 +66,9 @@ def document_context(d: Obyektivka, mode: Mode) -> dict[str, Any]:
     }
 
 
-def render_preview_html(d: Obyektivka) -> str:
+def render_preview_html(d: Obyektivka, page_labels: bool = True) -> str:
     """O'ng paneldagi A4 varaqlar (HTMX fragment)."""
-    return render_to_string("obyektivka/document.html", document_context(d, "preview"))
+    return render_to_string("obyektivka/document.html", document_context(d, "preview", page_labels))
 
 
 # ---------------------------------------------------------------------------
@@ -79,7 +80,7 @@ def _make_url_fetcher() -> Any:
 
     static_root = STATIC_DIR.resolve()
 
-    class SafeURLFetcher(URLFetcher):  # type: ignore[misc]
+    class SafeURLFetcher(URLFetcher):
         def fetch(self, url: str, headers: Any = None) -> Any:
             parsed = urlparse(url)
             if parsed.scheme == "file":

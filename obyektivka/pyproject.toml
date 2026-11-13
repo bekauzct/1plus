@@ -34,8 +34,14 @@ package = false
 DJANGO_SETTINGS_MODULE = "config.settings"
 testpaths = ["tests"]
 addopts = "-ra"
-filterwarnings = ["ignore:HarfBuzz-Subset:DeprecationWarning"]
-markers = ["e2e: brauzer orqali end-to-end testlar (playwright)"]
+filterwarnings = [
+    "ignore:HarfBuzz-Subset:DeprecationWarning",
+    "ignore:No directory at:UserWarning",
+]
+markers = [
+    "e2e: brauzer orqali end-to-end testlar (playwright)",
+    "ratelimit: rate limit yoqilgan holda",
+]
 
 [tool.ruff]
 line-length = 110

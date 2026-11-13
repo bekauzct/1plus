@@ -31,7 +31,7 @@ def _fix(o: Any) -> Any:
 
 
 def derive(d: dict[str, Any], skip: list[str] | None = None) -> dict[str, Any]:
-    return _fix(deep_convert(d, "lat", "cyr", skip))  # type: ignore[no-any-return]
+    return _fix(deep_convert(d, "lat", "cyr", skip))
 
 
 TL: dict[str, Any] = derive(uz_lat.TL)

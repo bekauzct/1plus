@@ -5,6 +5,7 @@
   data-p / data-row atributlari — editor'da yozilgan maydonni belgilash va scroll uchun.
 {% endcomment %}
 <div class="obv-doc obv-{{ mode }}" lang="{{ html_lang }}">
+  {% if mode == "preview" and page_labels %}<div class="page-label">{{ U.page1 }}</div>{% endif %}
   <section class="obv-page obv-page1" aria-label="{{ U.page1 }}">
     <div class="p-head">
       <div class="t">
@@ -34,6 +35,7 @@
     </table>
   </section>
 
+  {% if mode == "preview" and page_labels %}<div class="page-label">{{ U.page2 }}</div>{% endif %}
   <section class="obv-page obv-page2" aria-label="{{ U.page2 }}">
     <div class="p-rel-h" data-p="relH">{{ rel_lines.0 }}</div>
     <div class="p-rel-h">{{ rel_lines.1 }}</div>

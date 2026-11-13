@@ -34,11 +34,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.obyektivka.middleware.RequestSizeLimitMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.obyektivka.middleware.SecurityHeadersMiddleware",
+    # Ratelimited istisnosini RATELIMIT_VIEW (429 JSON) ga aylantiradi
+    "django_ratelimit.middleware.RatelimitMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -92,18 +95,20 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
         "BACKEND": (
-            "django.contrib.staticfiles.storage.StaticFilesStorage"
-            if DEBUG
-            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if PRODUCTION
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
         )
     },
 }
-WHITENOISE_USE_FINDERS = DEBUG
+WHITENOISE_USE_FINDERS = not PRODUCTION
 
 # So'rov hajmi limiti: rasm bilan 5 MB
 MAX_REQUEST_BYTES = 5 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_REQUEST_BYTES
 FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_REQUEST_BYTES
+# Yuklangan rasm faqat xotirada: vaqtinchalik fayl (disk) handler'i ulanmagan
+FILE_UPLOAD_HANDLERS = ["django.core.files.uploadhandler.MemoryFileUploadHandler"]
 
 # Xavfsizlik
 SECURE_CONTENT_TYPE_NOSNIFF = True
