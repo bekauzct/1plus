@@ -54,6 +54,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "apps.obyektivka.context_processors.site",
             ],
+            "builtins": ["apps.obyektivka.templatetags.obv"],
         },
     }
 ]

@@ -432,7 +432,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=10.4" },
     { name = "pydantic", specifier = ">=2.8,<3" },
     { name = "python-docx", specifier = ">=1.1" },
-    { name = "weasyprint", specifier = ">=62" },
+    { name = "weasyprint", specifier = ">=70" },
     { name = "whitenoise", specifier = ">=6.7" },
 ]
 
