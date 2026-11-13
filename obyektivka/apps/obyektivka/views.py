@@ -31,6 +31,7 @@ from . import render as renderer
 from .editor_spec import resolve as resolve_sections
 from .i18n import DEFAULT_LANG, LANGS, NOCONV, get_lang, get_sample, get_site, get_tl, get_ui, is_uzbek
 from .photo import Crop, PhotoError, process_photo, to_data_url
+from .ratelimit import client_ip
 from .schemas import Obyektivka, errors_for_client, has, lenient
 from .translit import deep_convert
 
@@ -212,7 +213,7 @@ def healthz(request: HttpRequest) -> HttpResponse:
 # API
 # ---------------------------------------------------------------------------
 @require_POST
-@ratelimit(key="ip", rate="240/m", block=True)
+@ratelimit(key=client_ip, rate="240/m", block=True)
 def api_preview(request: HttpRequest) -> HttpResponse:
     """Jonli preview: HTML fragment. Noto'g'ri maydonlar bo'lsa ham varaq chiziladi,
     xatolar ``HX-Trigger: {"obv-errors": {"errors": [...]}}`` sarlavhasida qaytadi."""
@@ -248,13 +249,13 @@ def _export(request: HttpRequest, kind: str) -> HttpResponse:
 
 
 @require_POST
-@ratelimit(key="ip", rate="30/m", block=True)
+@ratelimit(key=client_ip, rate="30/m", block=True)
 def api_export_pdf(request: HttpRequest) -> HttpResponse:
     return _export(request, "pdf")
 
 
 @require_POST
-@ratelimit(key="ip", rate="30/m", block=True)
+@ratelimit(key=client_ip, rate="30/m", block=True)
 def api_export_docx(request: HttpRequest) -> HttpResponse:
     return _export(request, "docx")
 
@@ -296,7 +297,7 @@ def convert_data(data: dict[str, Any], src: str, dst: str) -> tuple[dict[str, An
 
 
 @require_POST
-@ratelimit(key="ip", rate="60/m", block=True)
+@ratelimit(key=client_ip, rate="60/m", block=True)
 def api_convert_script(request: HttpRequest) -> HttpResponse:
     """{"data": {...}, "from": "lat", "to": "cyr"} -> {"data": {...}, "toast": "tConv" | "tLangOnly" | null}"""
     try:
@@ -314,7 +315,7 @@ def api_convert_script(request: HttpRequest) -> HttpResponse:
 
 
 @require_POST
-@ratelimit(key="ip", rate="30/m", block=True)
+@ratelimit(key=client_ip, rate="30/m", block=True)
 def api_photo(request: HttpRequest) -> HttpResponse:
     """multipart: photo=<fayl>, crop={"x","y","width","height","rotate"} (Cropper.js getData) -> {"photo": dataURL}"""
     f = request.FILES.get("photo")

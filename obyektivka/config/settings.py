@@ -71,16 +71,18 @@ DATABASES = {
 }
 
 # Rate limit hisoblagichlari uchun kesh (bir nechta worker bo'lsa — umumiy kesh kerak).
+# REDIS_URL berilsa (docker-compose) — barcha gunicorn worker'lar uchun umumiy hisoblagich.
+REDIS_URL = os.environ.get("REDIS_URL", "")
 CACHES = {
-    "default": {
-        "BACKEND": os.environ.get("CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"),
-        "LOCATION": os.environ.get("CACHE_LOCATION", "obyektivka"),
-    }
+    "default": (
+        {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}
+        if REDIS_URL
+        else {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "obyektivka"}
+    )
 }
 RATELIMIT_USE_CACHE = "default"
 RATELIMIT_VIEW = "apps.obyektivka.views.ratelimited"
-# Proksi ortida (nginx/Railway) haqiqiy IP: X-Forwarded-For dan olinadi
-RATELIMIT_IP_META_KEY = os.environ.get("RATELIMIT_IP_META_KEY") or None
+# Kalit: apps.obyektivka.ratelimit.client_ip (proksi ortida TRUST_PROXY_HEADERS=1)
 RATELIMIT_ENABLE = env_bool("RATELIMIT_ENABLE", True)
 
 LANGUAGE_CODE = "uz"
