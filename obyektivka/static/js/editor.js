@@ -9,6 +9,9 @@
   'use strict';
 
   const STORE = 'obyektivka-draft-v2';
+  // Hisobga saqlash (boot.sync berilgan bo'lsa): oxirgi ko'rilgan server nusxasi vaqti va yuborilmagan o'zgarish belgisi
+  const SYNC_AT = 'obyektivka-sync-at';
+  const SYNC_DIRTY = 'obyektivka-sync-dirty';
   const KEYS = ['fish', 'lavozim', 'tugSana', 'tugJoy', 'millati', 'partiya', 'malumoti', 'tamomlagan',
     'mutaxassislik', 'ilmiyDaraja', 'ilmiyUnvon', 'tillar', 'mukofot', 'deputat'];
   const MEHNAT_F = ['dan', 'gacha', 'matn'];
@@ -94,6 +97,7 @@
         crop: { show: false },
         lastField: null,
         _saveT: null, _toastT: null, _lastScroll: 0,
+        _syncT: null, _syncOn: !!boot.sync, _syncReady: false, _syncPhoto: null,
 
         /* ---------------- ishga tushirish ---------------- */
         init() {
@@ -102,7 +106,11 @@
           try { stored = raw ? JSON.parse(raw) : null; } catch (e) { stored = null; }
           if (stored) this.S = normalize(stored, lang);
 
-          this.$watch('S', () => { this.changed(); this.save(); });
+          this.$watch('S', () => { this.changed(); this.save(); this.syncLater(); });
+          if (this._syncOn) {
+            this.pull(!!stored);
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && this._syncT) this.push(true); });
+          }
           this.setupSortable();
           this.setupFit();
           document.body.addEventListener('htmx:configRequest', e => {
@@ -150,6 +158,64 @@
             this.showToast(U.tNet);
           }
           this.changed();
+        },
+
+        /* ---------------- hisobga saqlash ---------------- */
+        /* Ochilishda: serverda yangiroq nusxa bo'lsa (boshqa qurilma yoki admin tahriri) — uni olamiz;
+           brauzerda yuborilmagan o'zgarish bo'lsa — brauzerdagisi ustun va serverga yuboriladi. */
+        async pull(hadLocal) {
+          try {
+            const m = await fetch(boot.sync + '?meta=1', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+            if (!m.ok) { this._syncOn = false; return; }
+            const at = (await m.json()).updatedAt;
+            const dirty = lsGet(SYNC_DIRTY) === '1' || (hadLocal && !lsGet(SYNC_AT));
+            if (at && !(hadLocal && this.anyData() && (dirty || lsGet(SYNC_AT) === at))) {
+              const r = await fetch(boot.sync, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+              if (!r.ok) { this._syncOn = false; return; }
+              const p = await r.json();
+              if (p.data) {
+                this.S = normalize({ ...p.data, photo: p.photo || '' }, lang);
+                this._syncPhoto = this.S.photo;
+                lsSet(SYNC_AT, p.updatedAt);
+                lsSet(SYNC_DIRTY, '');
+                this._syncReady = true;
+                this.save(true);
+                if (LANGS.includes(p.data.lang) && p.data.lang !== lang) this.convertFrom(p.data.lang);
+                return;
+              }
+            }
+            this._syncReady = true;
+            if (dirty || !at) this.push();
+          } catch (e) { /* tarmoq yo'q — keyingi o'zgarishda qayta urinadi */ this._syncReady = true; }
+        },
+        syncLater() {
+          if (!this._syncOn) return;
+          lsSet(SYNC_DIRTY, '1');
+          clearTimeout(this._syncT);
+          this._syncT = setTimeout(() => this.push(), 2500);
+        },
+        async push(leaving) {
+          clearTimeout(this._syncT);
+          this._syncT = null;
+          // Bo'sh varaq va tayyor namuna hisobga yozilmaydi
+          if (!this._syncOn || !this._syncReady || !this.anyData() || this.S.fish === boot.sample.fish) return;
+          const data = plain(this.S);
+          const photo = data.photo;
+          delete data.photo;
+          const body = { data };
+          if (photo !== this._syncPhoto) body.photo = photo;
+          const json = JSON.stringify(body);
+          try {
+            const res = await fetch(boot.sync, {
+              method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: json,
+              keepalive: !!leaving && json.length < 60000,
+            });
+            if (res.status === 401 || res.status === 403) { this._syncOn = false; return; }
+            if (!res.ok) return;
+            this._syncPhoto = photo;
+            lsSet(SYNC_AT, (await res.json()).updatedAt);
+            if (!this._syncT) lsSet(SYNC_DIRTY, '');
+          } catch (e) { /* keyingi o'zgarishda qayta yuboriladi */ }
         },
 
         /* ---------------- holat ---------------- */
@@ -401,6 +467,7 @@
         async exportFile(kind) {
           if (this.busy[kind]) return;
           this.busy[kind] = true;
+          if (this._syncT) this.push(); // yuklab olishdan oldin oxirgi o'zgarishlar hisobga yoziladi
           try {
             const res = await postJSON(this.urls[kind], { data: plain(this.S) });
             if (res.status === 422) {

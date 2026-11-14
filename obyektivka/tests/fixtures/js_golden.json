@@ -8821,6 +8821,29 @@
  {
   "fn": "lat2cyr",
   "args": [
+   "Brauzeringizda va hisobingizga bog‘langan holda bizning serverda. Shu sababli boshqa qurilmada davom ettirishingiz va keyinchalik boshqa hujjatlarni tez to‘ldirishingiz mumkin."
+  ],
+  "expected": "Браузерингизда ва ҳисобингизга боғланган ҳолда бизнинг серверда. Шу сабабли бошқа қурилмада давом эттиришингиз ва кейинчалик бошқа ҳужжатларни тез тўлдиришингиз мумкин."
+ },
+ {
+  "fn": "lat2new",
+  "args": [
+   "Brauzeringizda va hisobingizga bog‘langan holda bizning serverda. Shu sababli boshqa qurilmada davom ettirishingiz va keyinchalik boshqa hujjatlarni tez to‘ldirishingiz mumkin."
+  ],
+  "expected": "Brauzeringizda va hisobingizga boğlangan holda bizning serverda. Şu sababli boşqa qurilmada davom ettirişingiz va keyinçalik boşqa hujjatlarni tez töldirişingiz mumkin."
+ },
+ {
+  "fn": "convertScript",
+  "args": [
+   "Brauzeringizda va hisobingizga bog‘langan holda bizning serverda. Shu sababli boshqa qurilmada davom ettirishingiz va keyinchalik boshqa hujjatlarni tez to‘ldirishingiz mumkin.",
+   "cyr",
+   "lat"
+  ],
+  "expected": "Brauzeringizda va hisobingizga bog‘langan holda bizning serverda. Shu sababli boshqa qurilmada davom ettirishingiz va keyinchalik boshqa hujjatlarni tez to‘ldirishingiz mumkin."
+ },
+ {
+  "fn": "lat2cyr",
+  "args": [
    "Bu oynada yuklab olish ishlamadi"
   ],
   "expected": "Бу ойнада юклаб олиш ишламади"
@@ -9787,6 +9810,29 @@
  {
   "fn": "lat2cyr",
   "args": [
+   "Kiritgan ma’lumotlaringiz hisobingizga bog‘lab saqlanadi: boshqa qurilmada davom ettirishingiz va keyinchalik rezyume kabi hujjatlarni bir bosishda to‘ldirishingiz mumkin."
+  ],
+  "expected": "Киритган маълумотларингиз ҳисобингизга боғлаб сақланади: бошқа қурилмада давом эттиришингиз ва кейинчалик резюме каби ҳужжатларни бир босишда тўлдиришингиз мумкин."
+ },
+ {
+  "fn": "lat2new",
+  "args": [
+   "Kiritgan ma’lumotlaringiz hisobingizga bog‘lab saqlanadi: boshqa qurilmada davom ettirishingiz va keyinchalik rezyume kabi hujjatlarni bir bosishda to‘ldirishingiz mumkin."
+  ],
+  "expected": "Kiritgan ma’lumotlaringiz hisobingizga boğlab saqlanadi: boşqa qurilmada davom ettirişingiz va keyinçalik rezyume kabi hujjatlarni bir bosişda töldirişingiz mumkin."
+ },
+ {
+  "fn": "convertScript",
+  "args": [
+   "Kiritgan ma’lumotlaringiz hisobingizga bog‘lab saqlanadi: boshqa qurilmada davom ettirishingiz va keyinchalik rezyume kabi hujjatlarni bir bosishda to‘ldirishingiz mumkin.",
+   "cyr",
+   "lat"
+  ],
+  "expected": "Kiritgan ma’lumotlaringiz hisobingizga bog‘lab saqlanadi: boshqa qurilmada davom ettirishingiz va keyinchalik rezyume kabi hujjatlarni bir bosishda to‘ldirishingiz mumkin."
+ },
+ {
+  "fn": "lat2cyr",
+  "args": [
    "Kiritilgan matn ham o‘girildi"
   ],
   "expected": "Киритилган матн ҳам ўгирилди"
@@ -10105,6 +10151,29 @@
    "lat"
   ],
   "expected": "Ma’lumotlarim qayerda saqlanadi?"
+ },
+ {
+  "fn": "lat2cyr",
+  "args": [
+   "Ma’lumotlaringiz hisobingizda saqlanadi"
+  ],
+  "expected": "Маълумотларингиз ҳисобингизда сақланади"
+ },
+ {
+  "fn": "lat2new",
+  "args": [
+   "Ma’lumotlaringiz hisobingizda saqlanadi"
+  ],
+  "expected": "Ma’lumotlaringiz hisobingizda saqlanadi"
+ },
+ {
+  "fn": "convertScript",
+  "args": [
+   "Ma’lumotlaringiz hisobingizda saqlanadi",
+   "cyr",
+   "lat"
+  ],
+  "expected": "Ma’lumotlaringiz hisobingizda saqlanadi"
  },
  {
   "fn": "lat2cyr",

@@ -216,6 +216,7 @@ UI.update(
         "navEditor": "Muharrir",
         "skip": "Asosiy qismga o‘tish",
         "privacy": "Ma’lumotlaringiz serverda saqlanmaydi",
+        "privacySync": "Ma’lumotlaringiz hisobingizda saqlanadi",
         "exportJson": "eksport",
         "importJson": "import",
         "jsonHint": "Boshqa qurilmaga ko‘chirish uchun faylga saqlang",
@@ -260,6 +261,14 @@ SITE: dict[str, Any] = {
     "privacyP": (
         "Kiritgan ma’lumotlaringiz faqat brauzeringizda saqlanadi. Ko‘rinish va fayl yaratish uchun server ularni "
         "faqat so‘rov davomida xotirada ishlatadi — diskka, bazaga yoki jurnalga yozilmaydi."
+    ),
+    "privacyPSync": (
+        "Kiritgan ma’lumotlaringiz hisobingizga bog‘lab saqlanadi: boshqa qurilmada davom ettirishingiz va "
+        "keyinchalik rezyume kabi hujjatlarni bir bosishda to‘ldirishingiz mumkin."
+    ),
+    "faqStoreSync": (
+        "Brauzeringizda va hisobingizga bog‘langan holda bizning serverda. Shu sababli boshqa qurilmada davom "
+        "ettirishingiz va keyinchalik boshqa hujjatlarni tez to‘ldirishingiz mumkin."
     ),
     "whatH": "Obyektivka nima?",
     "whatP": (

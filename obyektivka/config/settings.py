@@ -31,6 +31,10 @@ SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000").rstrip("/")
 _prefix = os.environ.get("URL_PREFIX", "").strip().strip("/")
 URL_PREFIX = f"/{_prefix}" if _prefix else ""
 FORCE_SCRIPT_NAME = URL_PREFIX or None
+# Ilova hisobga kirilgan sayt ichida ishlasa (foog.uz/obyektivka): tahrirlovchi ma'lumotni brauzerdan shu
+# manzilga saqlaydi (GET/PUT, o'sha saytning cookie'si bilan). Bo'sh bo'lsa ma'lumot faqat brauzerda qoladi.
+# Yoqilganda sahifadagi maxfiylik matnlari ham shunga mos o'zgaradi.
+PROFILE_SYNC_URL = os.environ.get("PROFILE_SYNC_URL", "").strip()
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",

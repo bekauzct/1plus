@@ -311,3 +311,24 @@ def _check_prefixed(client: Client) -> None:
     )
     api = _post(client, "/api/convert-script", {"text": "salom", "to": "cyr"})
     assert api["Cache-Control"] == "no-store"  # type: ignore[index]
+
+
+# --- Hisobga saqlash (PROFILE_SYNC_URL) ---
+def test_sync_off_by_default(client):
+    html = client.get("/uzb/obyektivka/").content.decode()
+    assert '"sync": ""' in html
+    assert "serverda saqlanmaydi" in html
+
+
+def test_sync_on_changes_boot_and_privacy_texts(client, settings):
+    settings.PROFILE_SYNC_URL = "/api/v1/obyektivka/me"
+    html = client.get("/uzb/obyektivka/").content.decode()
+    assert '"sync": "/api/v1/obyektivka/me"' in html
+    assert "serverda saqlanmaydi" not in html
+    assert "hisobingizda saqlanadi" in html
+    for prefix in ("uzb", "uz", "kr", "ru"):
+        landing = client.get(f"/{prefix}/").content.decode()
+        assert "saqlanmaydi" not in landing
+        assert "не хранятся" not in landing
+        assert "faqat brauzeringizda" not in landing.lower()
+        assert "только в вашем браузере" not in landing.lower()

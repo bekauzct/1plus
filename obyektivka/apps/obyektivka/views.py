@@ -35,6 +35,7 @@ from .ratelimit import client_ip
 from .schemas import Obyektivka, errors_for_client, has, lenient
 from .translit import deep_convert
 
+FAQ_STORE_INDEX = 1  # SITE["faq"] dagi "Ma'lumotlarim qayerda saqlanadi?" savoli
 DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 
@@ -69,12 +70,18 @@ def _lang_urls(view: str) -> dict[str, str]:
 
 def _page_context(request: HttpRequest, lang: str, view: str) -> dict[str, Any]:
     urls = _lang_urls(view)
+    ui, site = get_ui(lang), get_site(lang)
+    if settings.PROFILE_SYNC_URL:
+        # Ma'lumot hisobga saqlanadi — "serverda saqlanmaydi" degan matnlar o'rniga haqiqiy holat ko'rsatiladi
+        ui = {**ui, "privacy": ui["privacySync"]}
+        faq = [{**f, "a": site["faqStoreSync"]} if i == FAQ_STORE_INDEX else f for i, f in enumerate(site["faq"])]
+        site = {**site, "privacyP": site["privacyPSync"], "faq": faq}
     return {
         "lang": lang,
         "L": get_lang(lang),
-        "U": get_ui(lang),
+        "U": ui,
         "T": get_tl(lang),
-        "site": get_site(lang),
+        "site": site,
         "lang_urls": [(LANGS[c], u) for c, u in urls.items()],
         "canonical": settings.SITE_URL + urls[lang],
         "alternates": [(LANGS[c].hreflang, settings.SITE_URL + u) for c, u in urls.items()],
@@ -150,11 +157,12 @@ def landing(request: HttpRequest, lang: str) -> HttpResponse:
 @ensure_csrf_cookie
 def editor(request: HttpRequest, lang: str) -> HttpResponse:
     ctx = _page_context(request, lang, "editor")
-    ui = get_ui(lang)
+    ui = ctx["U"]
     ctx["boot"] = {
         "lang": lang,
         "ui": ui,
         "sample": get_sample(lang),
+        "sync": settings.PROFILE_SYNC_URL,
         "urls": {
             "preview": reverse("api_preview"),
             "pdf": reverse("api_export_pdf"),
