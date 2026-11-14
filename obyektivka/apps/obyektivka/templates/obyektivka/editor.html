@@ -1,0 +1,252 @@
+{% extends "obyektivka/base.html" %}
+{% load static %}
+{% block title %}{{ site.editorTitle }}{% endblock %}
+{% block description %}{{ site.editorDesc }}{% endblock %}
+{% block og_title %}{{ site.editorTitle }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/document.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/cropper.min.css' %}">
+{% endblock %}
+{% block body_class %}editor-page bg-bg text-ink{% endblock %}
+{% block body_attrs %}x-data="editor" :data-tab="tab" data-tab="form" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' @obv-errors.window="serverErrors($event.detail)" @keydown.escape.window="onEscape()"{% endblock %}
+
+{% block header_actions %}
+  <button type="button" class="btn ghost hide-sm" @click="sample()">{{ U.sample }}</button>
+  <button type="button" class="btn exp" id="btnDocx" @click="exportFile('docx')" :disabled="busy.docx" title="Word (.docx)">
+    <span aria-hidden="true">⬇</span> Word
+  </button>
+  <button type="button" class="btn primary exp" id="btnPdf" @click="exportFile('pdf')" :disabled="busy.pdf" title="PDF">
+    <span aria-hidden="true" x-show="!busy.pdf">⬇</span><span x-text="busy.pdf ? U.preparing : 'PDF'">PDF</span>
+  </button>
+{% endblock %}
+
+{% block content %}
+{{ boot|json_script:"obv-boot" }}
+<div class="tabs" role="tablist" aria-label="{{ U.tabForm }} / {{ U.tabPrev }}">
+  <button type="button" role="tab" id="tab-form" aria-controls="form" :aria-selected="tab === 'form'" :class="tab === 'form' && 'on'" @click="setTab('form')">{{ U.tabForm }}</button>
+  <button type="button" role="tab" id="tab-preview" aria-controls="previewPane" :aria-selected="tab === 'preview'" :class="tab === 'preview' && 'on'" @click="setTab('preview')">{{ U.tabPrev }}</button>
+</div>
+
+<div class="layout" id="main">
+  {# ================= FORMA ================= #}
+  <form class="form-pane" id="form" autocomplete="off" novalidate @submit.prevent @input="onInput($event)" aria-labelledby="tab-form">
+    <p class="privacy-note"><span aria-hidden="true">🔒</span> {{ U.privacy }}</p>
+    <div class="progress" role="group" aria-label="{{ U.filled }}">
+      <div class="lbl"><span>{{ U.filled }}</span><span x-text="progress + '%'">0%</span></div>
+      <div class="bar" role="progressbar" aria-label="{{ U.filled }}" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progress"><i :style="`width:${progress}%`"></i></div>
+    </div>
+
+    {% for sec in sections %}
+    <details class="sec" {% if forloop.first %}open{% endif %}>
+      <summary><span class="n" aria-hidden="true">{{ sec.n }}</span><span>{{ sec.title }}</span><span class="chev" aria-hidden="true">›</span></summary>
+      <div class="sec-body">
+        {% if sec.photo %}
+        <div class="photo-row">
+          <button type="button" class="photo-box" @click="$refs.photoInput.click()" aria-label="{{ U.photoUp }}">
+            <template x-if="S.photo"><img :src="S.photo" alt=""></template>
+            <span x-show="!S.photo">{{ U.photoBox }}</span>
+          </button>
+          <div>
+            <button type="button" class="btn sm" @click="$refs.photoInput.click()" :disabled="busy.photo">{{ U.photoUp }}</button>
+            <button type="button" class="btn sm ghost" x-show="S.photo" x-cloak @click="removePhoto()">{{ U.photoRm }}</button>
+            <p class="hint mt-1.5">{{ U.photoHint }}</p>
+            <label class="sr-only" for="photoInput">{{ U.photoUp }}</label>
+            <input type="file" id="photoInput" x-ref="photoInput" accept="image/jpeg,image/png,image/webp" class="hidden" @change="pickPhoto($event)">
+          </div>
+        </div>
+        {% endif %}
+        {% for row in sec.rows %}
+        <div class="{% if row|length > 1 %}grid2{% endif %}">
+          {% for f in row %}
+          <div class="field">
+            <label for="f-{{ f.key }}">{{ f.label_text }}</label>
+            {% if f.type == "textarea" %}
+            <textarea id="f-{{ f.key }}" data-k="{{ f.key }}" rows="2" placeholder="{{ f.placeholder }}" x-model="S.{{ f.key }}"
+              :aria-invalid="!!errors['{{ f.key }}']" aria-describedby="err-{{ f.key }}{% if f.hint_text %} hint-{{ f.key }}{% endif %}"></textarea>
+            {% else %}
+            <input type="text" id="f-{{ f.key }}" data-k="{{ f.key }}" placeholder="{{ f.placeholder }}" x-model="S.{{ f.key }}"
+              {% if f.inputmode %}inputmode="{{ f.inputmode }}"{% endif %}
+              {% if f.date %}maxlength="10" @input="maskDate($event)" @blur="checkDate()"{% endif %}
+              :aria-invalid="!!errors['{{ f.key }}']" aria-describedby="err-{{ f.key }}{% if f.hint_text %} hint-{{ f.key }}{% endif %}">
+            {% endif %}
+            {% if f.hint_text %}<span class="hint" id="hint-{{ f.key }}">{{ f.hint_text }}</span>{% endif %}
+            <span class="err" id="err-{{ f.key }}" role="alert" x-show="errors['{{ f.key }}']" x-text="U[errors['{{ f.key }}']]" x-cloak></span>
+            {% if f.chip_list %}
+            <div class="chips">
+              {% for c in f.chip_list %}<button type="button" class="chip" @click="chip('{{ f.key }}', $el.textContent, {{ f.append|yesno:'true,false' }})">{{ c }}</button>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </details>
+    {% endfor %}
+
+    {# --- 4. Mehnat faoliyati --- #}
+    <details class="sec">
+      <summary><span class="n" aria-hidden="true">4</span><span>{{ U.s4 }}</span><span class="chev" aria-hidden="true">›</span></summary>
+      <div class="sec-body">
+        <div x-ref="mehnatList" class="sortable-list">
+          <template x-for="(m, i) in S.mehnat" :key="m._id">
+            <div class="row-card" :data-i="i">
+              <div class="row-actions">
+                <span class="icon-btn drag-handle" title="{{ U.drag }}" aria-hidden="true">⠿</span>
+                <button type="button" class="icon-btn" @click="move('mehnat', i, -1)" :disabled="i === 0" title="{{ U.up }}" aria-label="{{ U.up }}">↑</button>
+                <button type="button" class="icon-btn" @click="move('mehnat', i, 1)" :disabled="i === S.mehnat.length - 1" title="{{ U.down }}" aria-label="{{ U.down }}">↓</button>
+                <button type="button" class="icon-btn del" @click="removeRow('mehnat', i)" title="{{ U.del }}" aria-label="{{ U.del }}">✕</button>
+              </div>
+              <div class="head" x-text="(i + 1) + U.period"></div>
+              <div class="grid2">
+                <div class="field">
+                  <label :for="'m-dan-' + m._id">{{ U.fDan }}</label>
+                  <input type="text" :id="'m-dan-' + m._id" data-m="dan" x-model="m.dan" placeholder="2020" inputmode="numeric" maxlength="4"
+                    @blur="checkYear('mehnat.' + i + '.dan', m.dan)" :aria-invalid="!!errors['mehnat.' + i + '.dan']">
+                  <span class="err" role="alert" x-show="errors['mehnat.' + i + '.dan']" x-text="U.errYear" x-cloak></span>
+                </div>
+                <div class="field">
+                  <label :for="'m-gacha-' + m._id">{{ U.fGacha }}</label>
+                  <input type="text" :id="'m-gacha-' + m._id" data-m="gacha" x-model="m.gacha" placeholder="{{ U.phGacha }}" inputmode="numeric" maxlength="4"
+                    @blur="checkYear('mehnat.' + i + '.gacha', m.gacha)" :aria-invalid="!!errors['mehnat.' + i + '.gacha']">
+                  <span class="err" role="alert" x-show="errors['mehnat.' + i + '.gacha']" x-text="U.errYear" x-cloak></span>
+                </div>
+              </div>
+              <div class="field mb-0">
+                <label :for="'m-matn-' + m._id">{{ U.fMatn }}</label>
+                <textarea :id="'m-matn-' + m._id" data-m="matn" rows="2" x-model="m.matn" placeholder="{{ U.phMatn }}"></textarea>
+              </div>
+            </div>
+          </template>
+        </div>
+        <button type="button" class="btn add-btn" @click="addMehnat()">{{ U.addM }}</button>
+        <p class="hint mt-2">{{ U.hM }}</p>
+      </div>
+    </details>
+
+    {# --- 5. Qarindoshlar --- #}
+    <details class="sec">
+      <summary><span class="n" aria-hidden="true">5</span><span>{{ U.s5 }}</span><span class="chev" aria-hidden="true">›</span></summary>
+      <div class="sec-body">
+        <div x-ref="relList" class="sortable-list">
+          <template x-for="(r, i) in S.qarindosh" :key="r._id">
+            <div class="row-card" :data-i="i">
+              <div class="row-actions">
+                <span class="icon-btn drag-handle" title="{{ U.drag }}" aria-hidden="true">⠿</span>
+                <button type="button" class="icon-btn" @click="move('qarindosh', i, -1)" :disabled="i === 0" title="{{ U.up }}" aria-label="{{ U.up }}">↑</button>
+                <button type="button" class="icon-btn" @click="move('qarindosh', i, 1)" :disabled="i === S.qarindosh.length - 1" title="{{ U.down }}" aria-label="{{ U.down }}">↓</button>
+                <button type="button" class="icon-btn del" @click="removeRow('qarindosh', i)" title="{{ U.del }}" aria-label="{{ U.del }}">✕</button>
+              </div>
+              <div class="head" x-text="(i + 1) + '. ' + (r.rel || U.relDef)"></div>
+              <div class="grid2">
+                <div class="field">
+                  <label :for="'r-rel-' + r._id">{{ U.fRel }}</label>
+                  <input type="text" :id="'r-rel-' + r._id" list="relOpts" data-r="rel" x-model="r.rel" placeholder="{{ U.phRel }}">
+                </div>
+                <div class="field">
+                  <label :for="'r-yil-' + r._id">{{ U.fYil }}</label>
+                  <input type="text" :id="'r-yil-' + r._id" data-r="yil" x-model="r.yil" placeholder="1975" inputmode="numeric" maxlength="4"
+                    @blur="checkYear('qarindosh.' + i + '.yil', r.yil)" :aria-invalid="!!errors['qarindosh.' + i + '.yil']">
+                  <span class="err" role="alert" x-show="errors['qarindosh.' + i + '.yil']" x-text="U.errYear" x-cloak></span>
+                </div>
+              </div>
+              <div class="field">
+                <label :for="'r-fish-' + r._id">{{ U.fRFish }}</label>
+                <input type="text" :id="'r-fish-' + r._id" data-r="fish" x-model="r.fish" placeholder="{{ U.phRFish }}">
+              </div>
+              <div class="field">
+                <label :for="'r-joy-' + r._id">{{ U.fRJoy }}</label>
+                <input type="text" :id="'r-joy-' + r._id" data-r="joy" x-model="r.joy" placeholder="{{ U.phRJoy }}">
+              </div>
+              <div class="field">
+                <label :for="'r-ish-' + r._id">{{ U.fIsh }}</label>
+                <textarea :id="'r-ish-' + r._id" data-r="ish" rows="2" x-model="r.ish" placeholder="{{ U.phIsh }}"></textarea>
+                <div class="chips">
+                  {% for c in U.ishChips %}<button type="button" class="chip" @click="r.ish = $el.textContent; touched('qarindosh', i)">{{ c }}</button>{% endfor %}
+                </div>
+              </div>
+              <div class="field mb-0">
+                <label :for="'r-turar-' + r._id">{{ U.fTurar }}</label>
+                <textarea :id="'r-turar-' + r._id" data-r="turar" rows="2" x-model="r.turar" placeholder="{{ U.phTurar }}"></textarea>
+                <div class="chips" x-show="i > 0">
+                  <button type="button" class="chip" @click="r.turar = S.qarindosh[i - 1].turar; touched('qarindosh', i)">{{ U.same }}</button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+        <button type="button" class="btn add-btn" @click="addRel()">{{ U.addR }}</button>
+      </div>
+    </details>
+
+    <div class="toolbar-bottom">
+      <button type="button" class="btn ghost sm" @click="sample()">{{ U.sample }}</button>
+      <button type="button" class="btn ghost sm text-danger" @click="clearAll()">{{ U.clear }}</button>
+    </div>
+    <div class="toolbar-bottom" role="group" aria-describedby="jsonHint">
+      <button type="button" class="btn ghost sm" @click="exportJson()">JSON {{ U.exportJson }}</button>
+      <button type="button" class="btn ghost sm" @click="$refs.jsonInput.click()">JSON {{ U.importJson }}</button>
+      <label class="sr-only" for="jsonInput">JSON {{ U.importJson }}</label>
+      <input type="file" id="jsonInput" x-ref="jsonInput" accept="application/json,.json" class="hidden" @change="importJson($event)">
+    </div>
+    <p class="hint mt-1" id="jsonHint">{{ U.jsonHint }}</p>
+    <datalist id="relOpts">{% for r in U.rels %}<option value="{{ r }}"></option>{% endfor %}</datalist>
+  </form>
+
+  {# ================= KO'RINISH ================= #}
+  <section class="preview-pane" id="previewPane" x-ref="pane" aria-labelledby="tab-preview" tabindex="-1">
+    <div class="pv-busy" id="pvBusy" aria-hidden="true">{{ U.updating }}</div>
+    <div class="pages-wrap" x-ref="wrap">
+      <div id="preview" aria-live="off">{{ initial_html }}</div>
+    </div>
+    {# HTMX: state o'zgarganda (obv-changed) serverdan preview HTML olinadi #}
+    <div id="pvTrigger" class="hidden"
+      hx-post="{{ boot.urls.preview }}"
+      hx-trigger="obv-changed from:body delay:300ms"
+      hx-target="#preview"
+      hx-swap="innerHTML"
+      hx-sync="this:replace"
+      hx-indicator="#pvBusy"></div>
+  </section>
+</div>
+
+{# Toast #}
+<div class="toast" :class="toast.show && 'show'" role="status" aria-live="polite">
+  <span x-text="toast.msg"></span>
+  <button type="button" x-show="toast.action" x-cloak @click="toastAction()" x-text="toast.actionLabel"></button>
+</div>
+
+{# Tasdiqlash oynasi #}
+<div class="modal-bg" :class="modal.show && 'show'" x-cloak x-show="modal.show" @click.self="closeModal(false)">
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="mText" x-trap.noscroll="modal.show">
+    <p id="mText" x-text="modal.text"></p>
+    <div class="acts">
+      <button type="button" class="btn" @click="closeModal(false)">{{ U.cancel }}</button>
+      <button type="button" class="btn primary" @click="closeModal(true)">{{ U.yes }}</button>
+    </div>
+  </div>
+</div>
+
+{# Rasmni kesish (Cropper.js) #}
+<div class="modal-bg" :class="crop.show && 'show'" x-cloak x-show="crop.show">
+  <div class="modal crop-modal" role="dialog" aria-modal="true" aria-labelledby="cropTitle" x-trap.noscroll="crop.show">
+    <h3 id="cropTitle">{{ U.cropTitle }}</h3>
+    <div class="crop-area"><img x-ref="cropImg" alt=""></div>
+    <div class="acts">
+      <button type="button" class="btn ghost" @click="rotateCrop()">↻ {{ U.rotate }}</button>
+      <span class="flex-1"></span>
+      <button type="button" class="btn" @click="cancelCrop()">{{ U.cancel }}</button>
+      <button type="button" class="btn primary" @click="applyCrop()" :disabled="busy.photo">{{ U.cropApply }}</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+<script src="{% static 'vendor/sortable.min.js' %}" defer></script>
+<script src="{% static 'vendor/cropper.min.js' %}" defer></script>
+<script src="{% static 'js/editor.js' %}" defer></script>
+<script src="{% static 'vendor/alpine-focus.min.js' %}" defer></script>
+<script src="{% static 'vendor/alpine.min.js' %}" defer></script>
+{% endblock %}

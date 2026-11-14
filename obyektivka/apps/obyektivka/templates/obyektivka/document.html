@@ -1,0 +1,53 @@
+{% comment %}
+  Obyektivka varag'i — preview (HTMX fragment) va PDF (WeasyPrint) uchun YAGONA shablon.
+  Kontekst: d (Obyektivka), T (Labels), U (UI lug'at), mode ("preview" | "pdf"),
+            mehnat, qarindosh (to'ldirilgan qatorlar, asl indeks bilan), rel_lines, fish, font_base.
+  data-p / data-row atributlari — editor'da yozilgan maydonni belgilash va scroll uchun.
+{% endcomment %}
+<div class="obv-doc obv-{{ mode }}" lang="{{ html_lang }}">
+  {% if mode == "preview" and page_labels %}<div class="page-label">{{ U.page1 }}</div>{% endif %}
+  <section class="obv-page obv-page1" aria-label="{{ U.page1 }}">
+    <div class="p-head">
+      <div class="t">
+        <div class="h1">{{ T.title }}</div>
+        <div class="h2" data-p="fish">{% if d.fish|trim %}{{ d.fish|linebreaksbr }}{% elif mode == "preview" %}<span class="empty">{{ U.phPrevFish }}</span>{% else %}{{ T.blankName }}{% endif %}</div>
+      </div>
+      <div class="p-photo{% if d.photo %} has{% endif %}" data-p="photo">{% if d.photo %}<img src="{{ d.photo }}" alt="">{% elif mode == "preview" %}{{ T.photo }}{% endif %}</div>
+    </div>
+    <div class="p-lav" data-p="lavozim">{% if d.lavozim|trim %}{{ d.lavozim|linebreaksbr }}{% elif mode == "preview" %}<span class="empty">{{ U.phPrevLav }}</span>{% endif %}</div>
+    <table class="p-info">
+      <tr><td class="l">{{ T.tugYil }}</td><td class="v" data-p="tugSana">{% include "obyektivka/partials/val.html" with v=d.tugSana %}</td><td class="l2">{{ T.tugJoy }}</td><td data-p="tugJoy">{% include "obyektivka/partials/val.html" with v=d.tugJoy %}</td></tr>
+      <tr><td class="l">{{ T.millati }}</td><td class="v" data-p="millati">{% include "obyektivka/partials/val.html" with v=d.millati %}</td><td class="l2">{{ T.partiya }}</td><td data-p="partiya">{% include "obyektivka/partials/val.html" with v=d.partiya %}</td></tr>
+      <tr><td class="l">{{ T.malumoti }}</td><td class="v" data-p="malumoti">{% include "obyektivka/partials/val.html" with v=d.malumoti %}</td><td class="l2">{{ T.tamomlagan }}</td><td data-p="tamomlagan">{% include "obyektivka/partials/val.html" with v=d.tamomlagan %}</td></tr>
+      <tr><td class="l">{{ T.mutax }}</td><td class="v" data-p="mutaxassislik" colspan="3">{% include "obyektivka/partials/val.html" with v=d.mutaxassislik %}</td></tr>
+      <tr><td class="l">{{ T.ilmiyD }}</td><td class="v" data-p="ilmiyDaraja">{% include "obyektivka/partials/val.html" with v=d.ilmiyDaraja %}</td><td class="l2">{{ T.ilmiyU }}</td><td data-p="ilmiyUnvon">{% include "obyektivka/partials/val.html" with v=d.ilmiyUnvon %}</td></tr>
+    </table>
+    <div class="p-q">{{ T.qTil }}</div><div class="p-a" data-p="tillar">{% include "obyektivka/partials/val.html" with v=d.tillar %}</div>
+    <div class="p-q">{{ T.qMuk }}</div><div class="p-a" data-p="mukofot">{% include "obyektivka/partials/val.html" with v=d.mukofot %}</div>
+    <div class="p-q">{{ T.qDep }}</div><div class="p-a" data-p="deputat">{% include "obyektivka/partials/val.html" with v=d.deputat %}</div>
+    <div class="p-title">{{ T.mehnat }}</div>
+    <table class="p-mehnat">
+      {% for row in mehnat %}
+        <tr data-row="mehnat" data-i="{{ row.i }}"><td>{{ row.davr }}</td><td>– {{ row.m.matn|linebreaksbr }}</td></tr>
+      {% empty %}
+        {% if mode == "preview" %}<tr><td colspan="2" class="empty" style="text-align:center">{{ U.noMehnat }}</td></tr>{% endif %}
+      {% endfor %}
+    </table>
+  </section>
+
+  {% if mode == "preview" and page_labels %}<div class="page-label">{{ U.page2 }}</div>{% endif %}
+  <section class="obv-page obv-page2" aria-label="{{ U.page2 }}">
+    <div class="p-rel-h" data-p="relH">{{ rel_lines.0 }}</div>
+    <div class="p-rel-h">{{ rel_lines.1 }}</div>
+    <table class="p-rel">
+      <thead><tr><th style="width:15%">{{ T.thRel }}</th><th style="width:21%">{{ T.thFish }}</th><th style="width:21%">{{ T.thTug }}</th><th style="width:21%">{{ T.thIsh }}</th><th>{{ T.thTur }}</th></tr></thead>
+      <tbody>
+        {% for row in qarindosh %}
+          <tr data-row="qarindosh" data-i="{{ row.i }}"><td>{{ row.r.rel }}</td><td>{{ row.r.fish }}</td><td>{{ row.tug|linebreaksbr }}</td><td>{{ row.r.ish|linebreaksbr }}</td><td>{{ row.r.turar|linebreaksbr }}</td></tr>
+        {% empty %}
+          {% if mode == "preview" %}<tr><td colspan="5" class="empty">{{ U.noRel }}</td></tr>{% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>

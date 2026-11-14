@@ -1,0 +1,95 @@
+{% extends "obyektivka/base.html" %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/document.css' %}">
+<script type="application/ld+json">{{ ld_json|json_script_safe }}</script>
+{% endblock %}
+{% block header_actions %}
+  <a class="btn primary" href="{{ editor_url }}">{{ site.start }}</a>
+{% endblock %}
+
+{% block content %}
+<main id="main">
+  {# ---------- Hero ---------- #}
+  <section class="lp-section grid items-center gap-10 pb-10 pt-12 md:grid-cols-2 md:pt-16">
+    <div>
+      <p class="mb-3 inline-block rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-dark">{{ site.heroKicker }}</p>
+      <h1 class="text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">{{ site.heroH1 }}</h1>
+      <p class="mt-4 max-w-xl text-base leading-relaxed text-muted sm:text-lg">{{ site.heroSub }}</p>
+      <div class="mt-7 flex flex-wrap gap-3">
+        <a class="btn primary lg" href="{{ editor_url }}">{{ site.start }} <span aria-hidden="true">→</span></a>
+        <a class="btn lg" href="#namuna">{{ site.seeSample }}</a>
+      </div>
+      <p class="mt-6 flex items-start gap-2 rounded-lg border border-accent/20 bg-accent-soft px-4 py-3 text-sm text-accent-dark">
+        <span aria-hidden="true">🔒</span>
+        <span><strong>{{ U.privacy }}.</strong> {{ site.privacyP }}</span>
+      </p>
+    </div>
+    <div class="sample-frame" aria-hidden="true">
+      <div class="inner">{{ sample_html }}</div>
+    </div>
+  </section>
+
+  {# ---------- Obyektivka nima ---------- #}
+  <section class="lp-section py-10">
+    <div class="lp-card max-w-3xl">
+      <h2 class="mb-2 text-xl font-bold">{{ site.whatH }}</h2>
+      <p class="leading-relaxed text-muted">{{ site.whatP }}</p>
+    </div>
+  </section>
+
+  {# ---------- 3 qadam ---------- #}
+  <section class="lp-section py-10" aria-labelledby="steps-h">
+    <h2 class="lp-h2" id="steps-h">{{ site.stepsH }}</h2>
+    <ol class="grid gap-4 md:grid-cols-3">
+      {% for s in site.steps %}
+      <li class="lp-card">
+        <span class="grid h-9 w-9 place-items-center rounded-full bg-accent text-base font-bold text-white" aria-hidden="true">{{ forloop.counter }}</span>
+        <h3 class="mt-3 text-lg font-semibold">{{ s.t }}</h3>
+        <p class="mt-1 leading-relaxed text-muted">{{ s.d }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+    <div class="mt-8"><a class="btn primary lg" href="{{ editor_url }}">{{ site.start }} <span aria-hidden="true">→</span></a></div>
+  </section>
+
+  {# ---------- Namuna varaq ---------- #}
+  <section class="lp-section py-10" id="namuna" aria-labelledby="sample-h">
+    <h2 class="lp-h2" id="sample-h">{{ site.sampleH }}</h2>
+    <p class="-mt-3 mb-6 max-w-2xl text-muted">{{ site.sampleP }}</p>
+    <div class="overflow-x-auto rounded-xl bg-[#e9ebe6] py-6" tabindex="0" aria-label="{{ site.sampleH }}">
+      <div class="landing-sample">{{ sample_full_html }}</div>
+    </div>
+  </section>
+
+  {# ---------- Imkoniyatlar ---------- #}
+  <section class="lp-section py-10" aria-labelledby="feat-h">
+    <h2 class="lp-h2" id="feat-h">{{ site.featH }}</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      {% for f in site.feats %}
+      <li class="lp-card"><h3 class="text-base font-semibold">{{ f.t }}</h3><p class="mt-1 text-muted">{{ f.d }}</p></li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  {# ---------- FAQ ---------- #}
+  <section class="lp-section py-10" aria-labelledby="faq-h">
+    <h2 class="lp-h2" id="faq-h">{{ site.faqH }}</h2>
+    <div class="faq max-w-3xl">
+      {% for q in site.faq %}
+      <details{% if forloop.first %} open{% endif %}>
+        <summary>{{ q.q }}</summary>
+        <p class="mt-2 leading-relaxed text-muted">{{ q.a }}</p>
+      </details>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+
+<footer class="border-t border-line bg-panel">
+  <div class="lp-section flex flex-col gap-3 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+    <p>© {{ SITE_NAME }} — {{ site.footer }}</p>
+    <p>{{ U.privacy }}</p>
+  </div>
+</footer>
+{% endblock %}

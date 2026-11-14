@@ -1,0 +1,91 @@
+/*
+ * Obyektivka varag'i — preview va PDF uchun YAGONA stil.
+ * Preview: .obv-preview (ekranda A4 kartochka), PDF: .obv-pdf (WeasyPrint, @page A4).
+ * O'lchamlar prototipdagi 794px (=210mm @96dpi) varaqdan olingan.
+ */
+@font-face { font-family: "Tinos"; src: url("../fonts/Tinos-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Tinos"; src: url("../fonts/Tinos-Bold.ttf") format("truetype"); font-weight: 700; font-style: normal; font-display: swap; }
+
+@page {
+  size: A4;
+  margin: 62px 56px 62px 86px;
+}
+
+.obv-doc {
+  --obv-ink: #000;
+  font-family: "Tinos", "Times New Roman", Times, serif;
+  font-size: 15px;
+  line-height: 1.28;
+  color: var(--obv-ink);
+  -webkit-font-smoothing: antialiased;
+}
+.obv-doc *, .obv-doc *::before, .obv-doc *::after { box-sizing: border-box; }
+
+/* ---------- Varaq (preview) ---------- */
+.obv-preview .obv-page {
+  width: 794px;
+  min-height: 1123px;
+  margin: 0 auto 28px;
+  padding: 62px 56px 62px 86px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 8px 28px rgba(0, 0, 0, .08);
+  /* PDF'da sahifa qayerda bo'linishini ko'rsatuvchi chiziq (har 1123px da) */
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 1121px, #d9dcd5 1121px, #d9dcd5 1123px);
+  background-position: 0 0;
+}
+
+/* ---------- PDF ---------- */
+.obv-pdf .obv-page2 { break-before: page; }
+.obv-pdf .obv-page { width: auto; }
+
+/* ---------- Sarlavha + rasm ---------- */
+.obv-doc .p-head { display: flex; align-items: center; }
+.obv-doc .p-head .t { flex: 1; text-align: center; padding-top: 20px; }
+.obv-doc .p-head .h1 { font-weight: 700; text-decoration: underline; font-size: 17.5px; }
+.obv-doc .p-head .h2 { font-weight: 700; text-decoration: underline; font-size: 16.5px; margin-top: 2px; }
+.obv-doc .p-photo {
+  width: 104px; height: 138px; flex: none;
+  border: 1px solid #bbb; color: #999; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden;
+}
+.obv-doc .p-photo img { width: 104px; height: 138px; object-fit: cover; display: block; }
+.obv-doc .p-photo.has { border: none; }
+
+.obv-doc .p-lav { margin: 18px 0 10px; text-align: justify; }
+
+/* ---------- Ma'lumotlar jadvali ---------- */
+.obv-doc table { border-collapse: collapse; width: 100%; }
+.obv-doc table.p-info { margin-bottom: 4px; }
+.obv-doc table.p-info td { vertical-align: top; padding: 3px 6px 7px; }
+.obv-doc table.p-info td.l { font-weight: 700; width: 18%; }
+.obv-doc table.p-info td.v { width: 24%; }
+.obv-doc table.p-info td.l2 { font-weight: 700; width: 17%; }
+.obv-doc .p-q { font-weight: 700; margin-top: 8px; }
+.obv-doc .p-title { text-align: center; font-weight: 700; margin: 18px 0 10px; }
+
+/* ---------- Mehnat faoliyati ---------- */
+.obv-doc table.p-mehnat td { vertical-align: top; padding: 2px 6px 4px; }
+.obv-doc table.p-mehnat td:first-child { width: 23%; white-space: nowrap; }
+.obv-doc table.p-mehnat td:last-child { text-align: justify; }
+.obv-doc table.p-mehnat tr { break-inside: avoid; }
+
+/* ---------- Qarindoshlar ---------- */
+.obv-doc .p-rel-h { text-align: center; font-weight: 700; }
+.obv-doc table.p-rel { margin-top: 16px; font-size: 14px; }
+.obv-doc table.p-rel th, .obv-doc table.p-rel td { border: 1px solid #000; padding: 6px 5px; text-align: center; vertical-align: middle; }
+.obv-doc table.p-rel th { font-weight: 700; }
+/* Uzun jadval keyingi sahifaga o'tganda sarlavha qatori takrorlanadi, qator bo'linmaydi */
+.obv-doc table.p-rel thead { display: table-header-group; }
+.obv-doc table.p-rel tr { break-inside: avoid; page-break-inside: avoid; }
+
+/* ---------- Faqat preview ---------- */
+.obv-doc .empty { color: #b9bcb6; }
+.obv-doc .flash { animation: obv-flash .9s ease-out; }
+@keyframes obv-flash { 0% { background-color: #fff3b0; } 100% { background-color: transparent; } }
+@media (prefers-reduced-motion: reduce) { .obv-doc .flash { animation: none; outline: 2px solid #f2d33a; } }
+
+@media print {
+  .obv-preview .obv-page { box-shadow: none; margin: 0; padding: 0; width: auto; min-height: 0; background: none; }
+  .obv-preview .obv-page2 { break-before: page; }
+  .obv-doc .empty { visibility: hidden; }
+}

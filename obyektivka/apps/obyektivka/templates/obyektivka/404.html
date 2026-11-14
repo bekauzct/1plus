@@ -1,0 +1,9 @@
+{% extends "obyektivka/base.html" %}
+{% block title %}{{ site.notFound }}{% endblock %}
+{% block content %}
+<main id="main" class="mx-auto max-w-xl px-4 py-24 text-center">
+  <p class="text-6xl font-bold text-accent">404</p>
+  <h1 class="mt-4 text-2xl font-semibold">{{ site.notFound }}</h1>
+  <a class="btn primary mt-8" href="{{ home_url }}">{{ site.backHome }}</a>
+</main>
+{% endblock %}
