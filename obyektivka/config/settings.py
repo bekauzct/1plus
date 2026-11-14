@@ -96,8 +96,9 @@ USE_I18N = False
 USE_TZ = True
 TIME_ZONE = "Asia/Tashkent"
 
-# Nisbiy: Django oldiga URL_PREFIX (SCRIPT_NAME) ni o'zi qo'shadi -> /static/ yoki /obyektivka/static/
-STATIC_URL = "static/"
+# Prefiks bilan to'liq yo'l: manifest storage STATIC_URL ni ishga tushishda (so'rovdan tashqarida) bir marta
+# o'qiydi, shuning uchun nisbiy qiymat prefikssiz qolib ketadi. WhiteNoise FORCE_SCRIPT_NAME ni o'zi olib tashlaydi.
+STATIC_URL = f"{URL_PREFIX}/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STORAGES = {
