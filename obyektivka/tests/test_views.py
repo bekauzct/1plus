@@ -6,6 +6,7 @@ import logging
 
 import pytest
 from django.test import Client
+from django.urls import set_script_prefix
 from docx import Document
 from PIL import Image
 from pypdf import PdfReader
@@ -280,3 +281,33 @@ def test_security_headers(client: Client) -> None:
     r = client.get("/uzb/")
     assert r["X-Frame-Options"] == "DENY" and r["X-Content-Type-Options"] == "nosniff"
     assert "Permissions-Policy" in r
+
+
+# ---------------- boshqa sayt ichida (URL_PREFIX) ----------------
+def test_url_prefix_links_and_api_headers(client: Client, settings: object) -> None:
+    """foog.uz/obyektivka: proksi prefiksni olib tashlaydi, havolalar esa prefiks bilan chiqadi."""
+    settings.FORCE_SCRIPT_NAME = "/obyektivka"  # type: ignore[attr-defined]
+    settings.URL_PREFIX = "/obyektivka"  # type: ignore[attr-defined]
+    settings.STATIC_URL = "/obyektivka/static/"  # type: ignore[attr-defined]
+    settings.SITE_URL = "https://foog.uz"  # type: ignore[attr-defined]
+    # Test klienti FORCE_SCRIPT_NAME ni qo'llamaydi (WSGI handler qo'llaydi) - prefiksni qo'lda o'rnatamiz
+    set_script_prefix("/obyektivka/")
+    try:
+        _check_prefixed(client)
+    finally:
+        set_script_prefix("/")
+
+
+def _check_prefixed(client: Client) -> None:
+    r = client.get("/")
+    assert r.status_code == 302 and r["Location"] == "/obyektivka/uzb/"
+    html = client.get("/uzb/obyektivka/").content.decode()
+    assert 'href="/obyektivka/static/css/app.css"' in html
+    assert "/obyektivka/api/preview" in html
+    assert "https://foog.uz/obyektivka/uzb/" in client.get("/uzb/").content.decode()
+    robots = client.get("/robots.txt").content.decode()
+    assert (
+        "Disallow: /obyektivka/api/" in robots and "Sitemap: https://foog.uz/obyektivka/sitemap.xml" in robots
+    )
+    api = _post(client, "/api/convert-script", {"text": "salom", "to": "cyr"})
+    assert api["Cache-Control"] == "no-store"  # type: ignore[index]

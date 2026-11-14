@@ -14,7 +14,7 @@ class SecurityHeadersMiddleware:
         response = self.get_response(request)
         response.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         response.setdefault("Cross-Origin-Opener-Policy", "same-origin")
-        if request.path.startswith("/api/"):
+        if request.path_info.startswith("/api/"):
             # Shaxsiy ma'lumot: hech qanday kesh (brauzer/proksi) saqlamasin
             response["Cache-Control"] = "no-store"
         return response

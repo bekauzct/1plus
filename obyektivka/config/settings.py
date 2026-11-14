@@ -25,6 +25,12 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1],testserver")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000").rstrip("/")
+# Ilova boshqa saytning ichki yo'lida ishlasa (masalan foog.uz/obyektivka): URL_PREFIX=/obyektivka.
+# Proksi prefiksni olib tashlab yuboradi; Django barcha havolalarga uni o'zi qo'shadi.
+# Bu holda SITE_URL faqat domen bo'ladi (https://foog.uz), prefiks reverse() dan keladi.
+_prefix = os.environ.get("URL_PREFIX", "").strip().strip("/")
+URL_PREFIX = f"/{_prefix}" if _prefix else ""
+FORCE_SCRIPT_NAME = URL_PREFIX or None
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
@@ -90,7 +96,8 @@ USE_I18N = False
 USE_TZ = True
 TIME_ZONE = "Asia/Tashkent"
 
-STATIC_URL = "/static/"
+# Nisbiy: Django oldiga URL_PREFIX (SCRIPT_NAME) ni o'zi qo'shadi -> /static/ yoki /obyektivka/static/
+STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STORAGES = {

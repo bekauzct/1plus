@@ -78,7 +78,7 @@ def _page_context(request: HttpRequest, lang: str, view: str) -> dict[str, Any]:
         "lang_urls": [(LANGS[c], u) for c, u in urls.items()],
         "canonical": settings.SITE_URL + urls[lang],
         "alternates": [(LANGS[c].hreflang, settings.SITE_URL + u) for c, u in urls.items()],
-        "x_default": settings.SITE_URL + "/",
+        "x_default": settings.SITE_URL + reverse("root"),
         "home_url": reverse("landing", kwargs={"lang": lang}),
         "editor_url": reverse("editor", kwargs={"lang": lang}),
     }
@@ -200,7 +200,14 @@ def sitemap(request: HttpRequest) -> HttpResponse:
 @require_GET
 @cache_control(max_age=3600, public=True)
 def robots(request: HttpRequest) -> HttpResponse:
-    lines = ["User-agent: *", "Disallow: /api/", "Allow: /", f"Sitemap: {settings.SITE_URL}/sitemap.xml", ""]
+    prefix = settings.URL_PREFIX
+    lines = [
+        "User-agent: *",
+        f"Disallow: {prefix}/api/",
+        f"Allow: {prefix}/",
+        f"Sitemap: {settings.SITE_URL}{reverse('sitemap')}",
+        "",
+    ]
     return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
 
 
