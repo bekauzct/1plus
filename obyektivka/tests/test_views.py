@@ -252,8 +252,11 @@ def test_request_too_large(client: Client) -> None:
 # ---------------- rate limit ----------------
 @pytest.mark.ratelimit
 def test_rate_limit(client: Client) -> None:
-    codes = [_post(client, "/api/export/docx", {"data": {}}).status_code for _ in range(32)]
-    assert codes[0] == 200 and codes[-1] == 429
+    # Limit 30/daqiqa. Oyna daqiqa chegarasida yangilanadi: chegara 429 ni faqat kechiktiradi,
+    # shuning uchun 62 so'rovda u albatta chiqadi, birinchi 30 tasi esa doim 200.
+    codes = [_post(client, "/api/export/docx", {"data": {}}).status_code for _ in range(62)]
+    assert all(c == 200 for c in codes[:30])
+    assert 429 in codes
 
 
 # ---------------- maxfiylik ----------------
@@ -280,3 +283,18 @@ def test_security_headers(client: Client) -> None:
     r = client.get("/uzb/")
     assert r["X-Frame-Options"] == "DENY" and r["X-Content-Type-Options"] == "nosniff"
     assert "Permissions-Policy" in r
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1:8000", "172.18.0.1", "evil.example"])
+def test_healthz_ignores_allowed_hosts(client: Client, settings, host: str) -> None:  # type: ignore[no-untyped-def]
+    settings.ALLOWED_HOSTS = ["obyektivka.example.uz"]
+    r = client.get("/healthz", HTTP_HOST=host)
+    assert r.status_code == 200 and r.content == b"ok"
+    # boshqa sahifalar uchun Host tekshiruvi saqlanadi
+    assert client.get("/uzb/", HTTP_HOST="evil.example").status_code == 400
+
+
+def test_loopback_always_allowed() -> None:
+    from django.conf import settings
+
+    assert {"localhost", "127.0.0.1"} <= set(settings.ALLOWED_HOSTS)

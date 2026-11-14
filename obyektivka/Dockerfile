@@ -32,6 +32,7 @@ COPY --from=deps /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=config.settings \
     DJANGO_PRODUCTION=1 \
+    SQLITE_PATH=/app/data/db.sqlite3 \
     PORT=8000
 WORKDIR /app
 COPY --chown=app:app . .

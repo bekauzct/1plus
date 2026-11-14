@@ -224,6 +224,11 @@ So'ng `.env` da `DJANGO_SECURE_COOKIES=1`, `DJANGO_HSTS_SECONDS=31536000` va
 `docker compose --profile proxy up -d`. Konteyner nginx'i host nginx ortida bo'lsa, ikkala
 qatlam ham `X-Real-IP` ni uzatadi; `TRUST_PROXY_HEADERS=1` faqat proksi ortida yoqilsin.
 
+**Serverda HTTPS'siz sinash** (`http://<IP>:8000`): `.env` da `DJANGO_ALLOWED_HOSTS=<IP>`,
+`DJANGO_CSRF_TRUSTED_ORIGINS=http://<IP>:8000`, `DJANGO_SECURE_COOKIES=0`, `SITE_URL=http://<IP>:8000`.
+`DJANGO_SECURE_COOKIES=1` bo'lsa, http'da CSRF cookie o'rnatilmaydi va preview/PDF 403 qaytaradi.
+`localhost`/`127.0.0.1` doim ruxsat etilgan, `/healthz` esa Host'dan qat'i nazar `ok` qaytaradi.
+
 **Yangilash:** `git pull && docker compose --profile proxy up -d --build`.
 **Loglar:** `docker compose logs -f web` (request body yozilmaydi).
 

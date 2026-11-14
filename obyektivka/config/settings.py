@@ -23,6 +23,12 @@ if not SECRET_KEY:
     SECRET_KEY = "dev-insecure-key-faqat-lokal-uchun"
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1],testserver")
+# Loopback manzillar doim ruxsat etiladi: konteyner healthcheck'i va serverning o'zida
+# `curl http://127.0.0.1:8000` bilan tekshirish uchun. Absolyut URL'lar request Host'dan emas,
+# SITE_URL'dan quriladi, shuning uchun bu Host-header hujumlariga yo'l ochmaydi.
+for _h in ("localhost", "127.0.0.1", "[::1]"):
+    if _h not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_h)
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000").rstrip("/")
 
@@ -33,6 +39,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # /healthz Host tekshiruvidan oldin javob beradi (proksi/healthcheck istalgan Host bilan keladi)
+    "apps.obyektivka.middleware.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "apps.obyektivka.middleware.RequestSizeLimitMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
